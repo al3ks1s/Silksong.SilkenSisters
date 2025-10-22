@@ -3,7 +3,7 @@ using BepInEx;
 namespace SilkenSisters
 {
     // TODO - adjust the plugin guid as needed
-    [BepInAutoPlugin(id: "io.github.silkensisters")]
+    [BepInAutoPlugin(id: "io.github.al3ks1s.silkensisters")]
     public partial class SilkenSistersPlugin : BaseUnityPlugin
     {
         private void Awake()
