@@ -30,18 +30,10 @@
     <PackageReference Include="HarmonyX" Version="2.9.0" />
     <PackageReference Include="Hamunii.BepInEx.AutoPlugin" Version="2.0.1" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Unity.Analyzers" Version="1.25.0" PrivateAssets="all" />
-    <PackageReference
-      Include="UnityEngine.Modules"
-      Version="6000.0.50"
-      IncludeAssets="compile"
-    />
+    <PackageReference Include="Silksong.FsmUtil" Version="0.2.0" />
+    <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
     <!--If you're unable resolve this dependency, check that you're using the nuget v3 package feed instead of v2.-->
-    <PackageReference
-      Include="Silksong.GameLibs"
-      Version="*-*"
-      PrivateAssets="all"
-
-    />
+    <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <Folder Remove="thunderstore/tmp;thunderstore/dist" />
@@ -56,19 +48,14 @@
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
     </PropertyGroup>
-    <Copy
-      SourceFiles="@(Binaries)"
-      DestinationFolder="$(SilksongFolder)/BepInEx/plugins/$(TargetName)"
-      Condition="'$(SilksongFolder)' != '' And Exists('$(SilksongFolder)')"
-    />
+    <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongFolder)/BepInEx/plugins/$(TargetName)" Condition="'$(SilksongFolder)' != '' And Exists('$(SilksongFolder)')" />
     <RemoveDir Directories="$(ThunderstoreDir)/tmp;$(ThunderstoreDir)/dist" />
     <MakeDir Directories="$(ThunderstoreDir)/tmp" />
     <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/tmp" />
     <Exec Command="dotnet tool restore" />
-    <Exec
-      Command="dotnet tcli build --config-path &quot;$(ThunderstoreDir)/thunderstore.toml&quot; --package-name &quot;$(AssemblyTitle)&quot; --package-version $(Version)"
-      StandardOutputImportance="High"
-      StandardErrorImportance="High"
-    />
+    <Exec Command="dotnet tcli build --config-path &quot;$(ThunderstoreDir)/thunderstore.toml&quot; --package-name &quot;$(AssemblyTitle)&quot; --package-version $(Version)" StandardOutputImportance="High" StandardErrorImportance="High" />
+  </Target>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&quot;C:\Program Files (x86)\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.exe&quot;" />
   </Target>
 </Project>

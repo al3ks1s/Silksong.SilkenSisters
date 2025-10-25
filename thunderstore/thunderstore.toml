@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 # The name of the team you are publishing as
 namespace = "al3ks1s"
 # max 250 characters
-description = "Example mod description"
+description = "Mod that adds a duo Lace/Phantom fight"
 
 # Replace this with a correct repo URL if the default is not accurate
 websiteUrl = "https://github.com/al3ks1s/SilkenSisters"
@@ -40,4 +40,4 @@ communities = [ "hollow-knight-silksong" ]
 
 [publish.categories]
 # available categories can be found at https://github.com/thunderstore-io/ecosystem-schema/blob/master/games/data/hollow-knight-silksong.yml
-hollow-knight-silksong = [ "mods" ]
+hollow-knight-silksong = [ "mods", "boss" ]
