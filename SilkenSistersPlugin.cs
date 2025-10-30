@@ -49,6 +49,12 @@ using InControl.NativeDeviceProfiles;
 
 // __instance.GetComponent<tk2dSpriteAnimator>().Library.GetClipByName("Jump Antic").fps = 40;
 
+// Todo
+// Fix Lace downstab
+// Fix Lace Throwing you outside arena on upstabs
+// Make phantom invincible until fight start
+// Disable respawn point on wake up / Scene change if not organ
+
 namespace SilkenSisters
 {
 
@@ -180,7 +186,7 @@ namespace SilkenSisters
 
             Harmony.CreateAndPatchAll(typeof(SilkenSisters));
         }
-       
+        
         private IEnumerator WaitAndPatch()
         {
             yield return new WaitForSeconds(2f); // Give game time to init Language
@@ -189,7 +195,7 @@ namespace SilkenSisters
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(HeroController), "Die")]
-        private static void setDieTester(HeroController __instance, ref bool nonLethal, ref bool frostDeath)
+        private static void setDieListener(HeroController __instance, ref bool nonLethal, ref bool frostDeath)
         {
             SilkenSisters.Log.LogInfo($"Hornet died {nonLethal} {frostDeath} / isMemory? {SilkenSisters.isMemory()}");
             if (SilkenSisters.isMemory())
@@ -203,6 +209,26 @@ namespace SilkenSisters
             }
         }
 
+        /*
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(GameManager), "SaveGame")]
+        private static bool setSaveListener(GameManager __instance, ref int saveSlot, ref Action<bool> callback, ref bool withAutoSave, ref AutoSaveName autoSaveName)
+        {
+            callback?.Invoke(true);
+            SilkenSisters.Log.LogInfo($"Trying to save game. IsMemory? {SilkenSisters.isMemory()}");
+            if (SilkenSisters.isMemory())
+            {
+                SilkenSisters.Log.LogInfo($"Currently in the memory fight, skipping save process");
+                return false;
+            }
+            else
+            {
+                SilkenSisters.Log.LogInfo($"Currently not in the memory fight, continuing save process");
+                return true;
+            }
+        }
+        //*/
+
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ClampAngle), "DoClamp")]
@@ -210,7 +236,6 @@ namespace SilkenSisters
         {
             SilkenSisters.Log.LogInfo($"DoClamp     Clamped to angle {__instance.fsm.FindFloatVariable("Angle")} between {__instance.minValue}/{__instance.maxValue} : {__instance.angleVariable}");
         }
-
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(ClampAngleByScale), "DoClamp")]
@@ -323,7 +348,7 @@ namespace SilkenSisters
                 if (__instance.Actions.Length > 0)
                 {
                     foreach (FsmTransition transi in __instance.transitions)
-                    { 
+                    {
                         // SilkenSisters.Log.LogInfo($"    transitions for state {__instance.Name}: {transi.EventName} to {transi.toState}");
                     }
 
@@ -333,7 +358,55 @@ namespace SilkenSisters
                     }
                 }
             }
-            
+            if (__instance.Fsm.GameObject.name == "Memory Group(Clone)(Clone)")
+            {
+                SilkenSisters.Log.LogInfo($"{__instance.Fsm.GameObject.name}, Entering state {__instance.Name}");
+                if (__instance.Actions.Length > 0)
+                {
+                    foreach (FsmTransition transi in __instance.transitions)
+                    {
+                        SilkenSisters.Log.LogInfo($"    transitions for state {__instance.Name}: {transi.EventName} to {transi.toState}");
+                    }
+
+                    foreach (FsmStateAction action in __instance.Actions)
+                    {
+                        SilkenSisters.Log.LogInfo($"        Action for state {__instance.Name}: {action.GetType()}");
+                    }
+                }
+            }
+            if (__instance.Fsm.GameObject.name == "before")
+            {
+                SilkenSisters.Log.LogInfo($"{__instance.Fsm.GameObject.name}, Entering state {__instance.Name}");
+                if (__instance.Actions.Length > 0)
+                {
+                    foreach (FsmTransition transi in __instance.transitions)
+                    {
+                        SilkenSisters.Log.LogInfo($"    transitions for state {__instance.Name}: {transi.EventName} to {transi.toState}");
+                    }
+
+                    foreach (FsmStateAction action in __instance.Actions)
+                    {
+                        SilkenSisters.Log.LogInfo($"        Action for state {__instance.Name}: {action.GetType()}");
+                    }
+                }
+            }
+            if (__instance.Fsm.GameObject.name == "thread_memory")
+            {
+                SilkenSisters.Log.LogInfo($"{__instance.Fsm.GameObject.name}, Entering state {__instance.Name}");
+                if (__instance.Actions.Length > 0)
+                {
+                    foreach (FsmTransition transi in __instance.transitions)
+                    {
+                        SilkenSisters.Log.LogInfo($"    transitions for state {__instance.Name}: {transi.EventName} to {transi.toState}");
+                    }
+
+                    foreach (FsmStateAction action in __instance.Actions)
+                    {
+                        SilkenSisters.Log.LogInfo($"        Action for state {__instance.Name}: {action.GetType()}");
+                    }
+                }
+            }
+
         }
 
         private void onSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -355,21 +428,38 @@ namespace SilkenSisters
 
             await cacheGameObjects();
 
-            if (!isMemory())
+            if (!isMemory() && canSetup())
             {
-                Logger.LogInfo($"Is not memory, setting things up");
+                Logger.LogInfo($"Is not memory and all requirements met, setting things up");
                 setupDeepMemoryZone();
                 setupWakeupPoint();
                 setupRespawnPoint();
             }
+            else
+            {
+                if (!canSetup())
+                {
+                    Logger.LogInfo("Requirements are not met, skipping setting up the memory fight");
+                }
 
-            GameObject eff = GameObject.Find("Deep Memory Enter Black(Clone)");
+                if (isMemory())
+                {
+                    Logger.LogInfo("Scene is a memory");
+                }
+            }
+
+                GameObject eff = GameObject.Find("Deep Memory Enter Black(Clone)");
             if (eff != null)
             {
                 Logger.LogInfo("Deleting leftover memory effect");
                 GameObject.Destroy(eff);
             }
 
+        }
+
+        public static bool canSetup()
+        {
+            return SceneManager.GetActiveScene().name == "Organ_01" && PlayerData._instance.defeatedPhantom && PlayerData._instance.blackThreadWorld && PlayerData._instance.hasNeedolinMemoryPowerup;
         }
 
         public static bool isMemory()
@@ -400,6 +490,7 @@ namespace SilkenSisters
 
                 deepMemoryCache = await SceneObjectManager.loadObjectFromScene("Coral_Tower_01", "Memory Group");
 
+                Logger.LogWarning("Caching done");
 
                 if (laceNPCCache == null || lace2BossSceneCache == null || challengeDialogCache == null || wakeupPointCache == null || deepMemoryCache == null)
                 {
@@ -504,7 +595,7 @@ namespace SilkenSisters
                 phantomBossFSM.DisableAction("Parry Ready", 1);
                 phantomBossFSM.GetAction<Wait>("Parry Ready", 4).time = 0.001f;
                 phantomBossFSM.GetAction<Wait>("Parry Ready", 4).finishEvent = FsmEvent.GetFsmEvent("PARRY");
-
+                
                 phantomBossFSM.ChangeTransition("Death Explode", "FINISHED", "End Recover");
                 phantomBossFSM.AddAction("End Recover", phantomBossFSM.GetAction<SetPositionToObject2D>("Get Control", 2));
                 phantomBossFSM.AddAction("End Recover", phantomBossFSM.GetAction<SetPositionToObject2D>("Get Control", 4));
@@ -654,7 +745,7 @@ namespace SilkenSisters
                 exitMemory.GetAction<BeginSceneTransition>(4).sceneName = "Organ_01";
                 exitMemory.GetAction<BeginSceneTransition>(4).entryGateName = $"{respawnPointInstance.name}";
 
-                exitMemory.GetAction<Wait>(2).time = 0.5f;
+                exitMemory.GetAction<Wait>(2).time = 2f;
 
                 phantomBossFSM.AddState(exitMemory);
 
@@ -733,6 +824,13 @@ namespace SilkenSisters
             }
         }
 
+        private void enableIsMemory()
+        {
+            Logger.LogInfo("Enabling current scene to be memory");
+            GameManager._instance.ForceCurrentSceneIsMemory(true);
+            Logger.LogInfo($"Is Memory? {GameManager._instance.IsMemoryScene()} {GameManager._instance.forceCurrentSceneMemory}");
+        }
+
         private void enableDoor()
         {
             wakeupPointInstance.SetActive(true);
@@ -771,18 +869,23 @@ namespace SilkenSisters
                 wakeupPointInstance = GameObject.Instantiate(wakeupPointCache);
                 wakeupPointInstance.SetActive(false);
                 DontDestroyOnLoad(wakeupPointInstance);
+
+                Logger.LogInfo("Editing wakeup point name");
                 SceneObjectManager.findChildObject(wakeupPointInstance, "door_wakeInMemory").name = "door_wakeInMemory_phantom";
-                SceneObjectManager.findChildObject(wakeupPointInstance, "Fade").SetActive(false);
                 //wakeupPointInstance.transform.position = new Vector3(59.249f, 56.7457f, 0f);
                 wakeupPointInstance.transform.position = new Vector3(115.4518f, 104.5621f, 0f);
                 //SceneObjectManager.findChildObject(wakeupPointInstance, "door_wakeInMemory_phantom/Death Respawn Marker").GetComponent<RespawnMarker>().respawnFacingRight = false;
 
+                Logger.LogInfo("Editing the door FSM");
                 PlayMakerFSM doorFsm = FsmUtil.GetFsmPreprocessed(SceneObjectManager.findChildObject(wakeupPointInstance, "door_wakeInMemory_phantom"), "Wake Up");
                 InvokeMethod inv = new InvokeMethod(setupFight);
                 doorFsm.AddAction("Take Control", inv);
                 InvokeMethod inv2 = new InvokeMethod(enableRespawn);
                 doorFsm.AddAction("Get Up", inv2);
-                
+
+                InvokeMethod inv3 = new InvokeMethod(enableIsMemory);
+                doorFsm.AddAction("Get Up", inv3);
+
                 doorFsm.GetAction<ConvertBoolToFloat>("Fade Up", 1).falseValue = 3f;
                 doorFsm.GetAction<ConvertBoolToFloat>("Fade Up", 1).trueValue = 3f;
 
@@ -801,21 +904,27 @@ namespace SilkenSisters
             deepMemoryInstance = Instantiate(deepMemoryCache);
 
             deepMemoryInstance.transform.position = new Vector3(59.249f, 56.7457f, -3.1141f);
+            Logger.LogInfo($"Set deep memory zone position at {deepMemoryInstance.transform.position}");
 
+            Logger.LogInfo($"Finding and deleting coral king sprite");
             GameObject before = SceneObjectManager.findChildObject(deepMemoryInstance, "before"); // deep_memory.transform.GetComponentsInChildren<Transform>(true).First(tf => tf.name == "before").gameObject;
             GameObject.Destroy(SceneObjectManager.findChildObject(before, "CK_ground_hit0004").gameObject);
 
+            Logger.LogInfo($"Editing scene transition state actions");
             PlayMakerFSM memoryFSM = deepMemoryInstance.GetFsmPreprocessed("To Memory");
-
             memoryFSM.GetAction<BeginSceneTransition>("Transition Scene", 4).sceneName = "Organ_01";
             memoryFSM.GetAction<BeginSceneTransition>("Transition Scene", 4).entryGateName = "door_wakeInMemory_phantom";
 
+
+            Logger.LogInfo($"Adding action to enable memory door");
             InvokeMethod door = new InvokeMethod(enableDoor);
             memoryFSM.InsertAction("Transition Scene", door, 4);
 
+            Logger.LogInfo($"Adding action to disable tank respawn");
             InvokeMethod inv3 = new InvokeMethod(disableRespawn);
             memoryFSM.AddAction("Transition Scene", inv3);
 
+            Logger.LogInfo($"Setting playerdata to enable phantom fight");
             HutongGames.PlayMaker.Actions.SetPlayerDataBool enablePhantom = new HutongGames.PlayMaker.Actions.SetPlayerDataBool();
             enablePhantom.boolName = "defeatedPhantom";
             enablePhantom.value = false;
@@ -827,6 +936,7 @@ namespace SilkenSisters
             memoryFSM.InsertAction("Transition Scene", enablePhantom, 0);
             memoryFSM.InsertAction("Transition Scene", world_normal, 0);
 
+            Logger.LogInfo($"Bypassing tool pick up for deep memory zone activation");
             PlayMakerFSM pickupFSM = FsmUtil.GetFsmPreprocessed(before, "activate memory on tool pickup");
             pickupFSM.GetTransition("State 1", "PICKED UP").fsmEvent = FsmEvent.GetFsmEvent("FINISHED");
 
@@ -838,17 +948,20 @@ namespace SilkenSisters
         {
             if (respawnPointInstance == null)
             {
+
+                Logger.LogInfo("Setting respawn point");
                 respawnPointInstance = GameObject.Instantiate(SceneObjectManager.findChildObject(deepMemoryCache, "door_wakeOnGround"));
                 GameObject.DontDestroyOnLoad(respawnPointInstance);
                 respawnPointInstance.name = "door_wakeOnGround_phantom";
                 respawnPointInstance.transform.position = new Vector3(59.249f, 56.7457f, 0f);
 
+                Logger.LogInfo($"Editing FSM to disable the door");
                 PlayMakerFSM respawnFSM = FsmUtil.GetFsmPreprocessed(respawnPointInstance, "Wake Up");
                 InvokeMethod inv3 = new InvokeMethod(disableDoor);
                 respawnFSM.AddAction("End", inv3);
 
                 respawnPointInstance.SetActive(false);
-                Logger.LogInfo($"Respawn point: {respawnPointInstance}");
+                Logger.LogInfo($"Respawn point: {respawnPointInstance.name} at {respawnPointInstance.transform.position}");
             }
         }
 
@@ -1051,7 +1164,7 @@ namespace SilkenSisters
 
             if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.H))
             {
-                SilkenSisters.hornet.transform.position = new Vector3(114f, 105f, 0.004f);
+                SilkenSisters.hornet.transform.position = new Vector3(84.45f, 105f, 0.004f);
             }
 
             if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.L))
@@ -1077,10 +1190,16 @@ namespace SilkenSisters
                 toggleLaceFSM();
             }
 
-            if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.K))
+            if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.Keypad7))
             {
-                PlayMakerFSM.BroadcastEvent("ENTER");
-                ((PlayMakerFSM)phantomBossScene.GetComponent(typeof(PlayMakerFSM))).SendEvent("ENTER");
+                PlayerData._instance.defeatedPhantom = true;
+                PlayerData._instance.blackThreadWorld = true;
+                PlayerData._instance.HasStoredMemoryState = true;
+            }
+
+            if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.Keypad8))
+            {
+                Logger.LogInfo($"Is Memory? GM: {GameManager._instance.IsMemoryScene()} Mod: {SilkenSisters.isMemory()} CanSetup? {SilkenSisters.canSetup()}");
             }
 
             if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.G))

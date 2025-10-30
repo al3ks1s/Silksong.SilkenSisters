@@ -10,6 +10,8 @@ To access the fight you need to:
 - Have defeated both Lace 2 and Phantom
 - Have the Elegy of the Deep needolin skill
 
+Access the fight by playing Elegy of the Deep at Phantom's tank.
+
 For now, the bosses have their vanilla behaviors, there will probably be work on that in the future.
 
 ## Manual installation
