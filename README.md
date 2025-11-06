@@ -14,6 +14,11 @@ Access the fight by playing Elegy of the Deep at Phantom's tank.
 
 For now, the bosses have their vanilla behaviors, there will probably be work on that in the future.
 
+## Known bugs
+
+- Lace can throw you out of the arena, use Lalt+H to teleport back in the middle
+- Sometimes, the deep memory zone will not appear properly, restart the game
+
 ## Manual installation
 
 This mod requires the following mods to function: 

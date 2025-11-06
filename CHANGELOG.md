@@ -1,5 +1,10 @@
 # Changelog 
 
+## 0.1.4
+
+- Backend refactor
+- Linux & OSX support
+
 ## 0.1.3
 
 - Fixed lace teleporting outside the arena during her counters

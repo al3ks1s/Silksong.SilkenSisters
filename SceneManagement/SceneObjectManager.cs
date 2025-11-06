@@ -14,7 +14,18 @@ namespace SilkenSisters.SceneManagement
 {
     internal static class SceneObjectManager
     {
-        public static string sceneFolder = Path.Combine(Application.streamingAssetsPath, "aa", "StandaloneWindows64", "scenes_scenes_scenes");
+        public static string sceneFolder = Path.Combine(
+            Application.streamingAssetsPath,
+            "aa",
+            Application.platform switch
+            {
+                RuntimePlatform.WindowsPlayer => "StandaloneWindows64",
+                RuntimePlatform.OSXPlayer => "StandaloneOSX",
+                RuntimePlatform.LinuxPlayer => "StandaloneLinux64",
+                _ => ""
+            },
+            "scenes_scenes_scenes"
+        );
 
         public static async Task<GameObject> loadObjectFromScene(string sceneName, string objectToRetrieve)
         {
@@ -88,6 +99,7 @@ namespace SilkenSisters.SceneManagement
             SilkenSisters.Log.LogDebug($"Found object {cur_obj}");
 
             return cur_obj;
-        }
+        }   
+    
     }
 }
