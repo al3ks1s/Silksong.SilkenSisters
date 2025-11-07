@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.1.5
+
+- Fixed Thunderstore install structure that caused the title card to not appear
+
 ## 0.1.4
 
 - Backend refactor

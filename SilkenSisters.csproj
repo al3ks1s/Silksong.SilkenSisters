@@ -23,7 +23,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/al3ks1s/SilkenSisters</RepositoryUrl>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <IsPublishable>True</IsPublishable>
@@ -54,8 +54,8 @@
     <ItemGroup>
       <Binaries Include="$(TargetPath)" />
       <Binaries Include="$(TargetDir)/$(TargetName).pdb" />
-	  
-  <Binaries Include="languages/*.json" PackDir="languages" />
+	  <Binaries Include="languages/*.json" PackDir="plugins/languages" />
+	  <Binaries Include="languages/*.json" PackDir="languages" />
     </ItemGroup>
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
