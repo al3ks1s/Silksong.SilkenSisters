@@ -1,4 +1,4 @@
-﻿# Silken Sisters - Playtest version
+# Silken Sisters - Playtest version
 
 #### /!\ Disclaimer : Expect the mod to be broken in some parts as it is a test version. Please report any issue you find at https://github.com/al3ks1s/SilkenSisters/issues
 #### Use a save you don't care to lose in case this mod breaks things, a 100% save at the Organ is provided with the mod files so that you can test things out. Install it next to the other save files in `AppData\LocalLow\Team Cherry\Hollow Knight Silksong`
@@ -38,7 +38,7 @@ BepInEx/
 ﻿	plugins/
 		SilkenSisters/
 			<SilkenSisters files>
-		silksong_modding-I18N-1.0.1/
+		silksong_modding-I18N-1.0.2/
 			<I18N files>
-		﻿﻿silksong_modding-Silksong_FsmUtil-0.3.0/
+		﻿﻿silksong_modding-Silksong_FsmUtil-0.3.1/
 		﻿﻿﻿﻿	<FSMUtil files>
