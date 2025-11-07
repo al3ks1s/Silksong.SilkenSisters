@@ -33,11 +33,12 @@ This mod requires the following mods to function:
 5. Download and install this mod into the BepinEx/plugins folder into its own "SilkenSisters" folder
 
 The expected file structure is as follow :
+```
 BepInEx/
-	﻿plugins/
+﻿	plugins/
 		SilkenSisters/
 			<SilkenSisters files>
 		silksong_modding-I18N-1.0.1/
 			<I18N files>
-		﻿﻿silksong_modding-Silksong_FsmUtil-0.3.0/
-		﻿﻿﻿﻿	<FSMUtil files>
+		﻿silksong_modding-Silksong_FsmUtil-0.3.0/
+		﻿﻿﻿﻿	<FSMUtil files>```
