@@ -1,5 +1,9 @@
 # Changelog 
 
+## 0.2.1
+
+- Fixed a bug that made Lace AI get stuck due to incorrect PlayerData in some modded saves
+
 ## 0.2.0
 
 - All Silksong's languages support

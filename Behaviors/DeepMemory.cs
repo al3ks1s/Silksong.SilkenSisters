@@ -44,6 +44,8 @@ namespace SilkenSisters.Behaviors
         private void setPosition()
         {
             gameObject.transform.position = new Vector3(59.249f, 56.7457f, -3.1141f);
+            SceneObjectManager.findChildObject(_before, "Deep_Memory_appear/threads").SetActive(false);
+            SceneObjectManager.findChildObject(_before, "thread_memory").transform.SetLocalPosition2D(1.768f, -3.143f);
             SilkenSisters.Log.LogInfo($"[DeepMemory.setPosition] position:{gameObject.transform.position}");
         }
 

@@ -102,7 +102,6 @@ namespace SilkenSisters
             }
         }
     }
-
     public class InvokeMethod : FsmStateAction
     {
         private readonly Action _action;
@@ -138,6 +137,8 @@ namespace SilkenSisters
         public GameObject wakeupPointCache = null;
         public GameObject deepMemoryCache = null;
 
+        public GameObject infoPromptCache = null;
+
         public FsmState ExitMemoryCache = null;
 
         public GameObject laceNPCInstance = null;
@@ -156,8 +157,11 @@ namespace SilkenSisters
         public GameObject respawnPointInstance = null;
         public GameObject deepMemoryInstance = null;
 
+        public GameObject infoPromptInstance = null;
+
         public GameObject phantomBossScene = null;
         public FsmOwnerDefault phantomBossSceneFSMOwner = null;
+
 
 
         private bool cachingSceneObjects = false;
@@ -364,11 +368,20 @@ namespace SilkenSisters
 
         public static bool canSetup()
         {
-            return SceneManager.GetActiveScene().name == "Organ_01" && PlayerData._instance.defeatedPhantom && PlayerData._instance.blackThreadWorld && PlayerData._instance.hasNeedolinMemoryPowerup;
+            SilkenSisters.Log.LogDebug($"[CanSetup] Scene:{SceneManager.GetActiveScene().name} " +
+                $"DefeatedLace2:{PlayerData._instance.defeatedLaceTower} " +
+                $"DefeatedPhantom:{PlayerData._instance.defeatedPhantom} " +
+                $"Act3:{PlayerData._instance.blackThreadWorld} " +
+                $"Needolin:{PlayerData._instance.hasNeedolinMemoryPowerup}");
+            return SceneManager.GetActiveScene().name == "Organ_01" && PlayerData._instance.defeatedLaceTower && PlayerData._instance.defeatedPhantom && PlayerData._instance.blackThreadWorld && PlayerData._instance.hasNeedolinMemoryPowerup;
         }
 
         public static bool isMemory()
         {
+            SilkenSisters.Log.LogDebug($"[isMemory] Scene:{SceneManager.GetActiveScene().name} " +
+                $"DefeatedPhantom:{PlayerData._instance.defeatedPhantom} " +
+                $"Act3:{PlayerData._instance.blackThreadWorld} " +
+                $"Needolin:{PlayerData._instance.hasNeedolinMemoryPowerup}");
             return SceneManager.GetActiveScene().name == "Organ_01" && !PlayerData._instance.defeatedPhantom && !PlayerData._instance.blackThreadWorld && PlayerData._instance.hasNeedolinMemoryPowerup;
         }
 
@@ -426,6 +439,10 @@ namespace SilkenSisters
                 deepMemoryCache.GetComponent<TestGameObjectActivator>().playerDataTest.TestGroups[0].Tests[0].FieldName = "defeatedPhantom";
                 deepMemoryCache.GetComponent<TestGameObjectActivator>().playerDataTest.TestGroups[0].Tests[0].BoolValue = false;
 
+                // Inspect Prompt
+                infoPromptCache = await SceneObjectManager.loadObjectFromScene("Arborium_01", "Inspect Region");
+                infoPromptCache.AddComponent<InfoPrompt>();
+
                 Logger.LogMessage("[cacheGameObjects] Caching done");
                 cachingSceneObjects = false;
                 if (laceBossPrefab != null)
@@ -475,7 +492,6 @@ namespace SilkenSisters
         {
 
             await cacheGameObjects();
-
             if (!isMemory() && canSetup())
             {
                 Logger.LogMessage($"[preloadOrgan] Is not memory and all requirements met, setting things up");
@@ -484,6 +500,12 @@ namespace SilkenSisters
             else
             {
                 Logger.LogInfo($"[preloadOrgan] Scene info: canSetup?:{canSetup()}, isMemory?:{isMemory()}");
+                if (!isMemory() && !canSetup())
+                {
+                    Logger.LogMessage($"[preloadOrgan] Displaying the info prompt");
+                    infoPromptInstance = GameObject.Instantiate(infoPromptCache);
+                    infoPromptInstance.SetActive(true);
+                }
             }
 
             GameObject eff = GameObject.Find("Deep Memory Enter Black(Clone)");
@@ -714,8 +736,14 @@ namespace SilkenSisters
             if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.Keypad7))
             {
                 PlayerData._instance.defeatedPhantom = true;
+                PlayerData._instance.defeatedLaceTower = true;
                 PlayerData._instance.blackThreadWorld = true;
                 PlayerData._instance.HasStoredMemoryState = true;
+                SilkenSisters.Log.LogWarning($"[CanSetup] Scene:{SceneManager.GetActiveScene().name} " +
+                    $"DefeatedLace2:{PlayerData._instance.defeatedLaceTower} " +
+                    $"DefeatedPhantom:{PlayerData._instance.defeatedPhantom} " +
+                    $"Act3:{PlayerData._instance.blackThreadWorld} " +
+                    $"Needolin:{PlayerData._instance.hasNeedolinMemoryPowerup}");
             }
         }
     }
@@ -728,7 +756,7 @@ namespace SilkenSisters
     {
         private static void Prefix(ref string key, ref string sheetTitle)
         {
-            if (key.Contains("SILKEN_SISTERS")) sheetTitle = $"Mods.io.github.al3ks1s.silkensisters";
-        }
+            if (key.Contains("SILKEN_SISTERS")) sheetTitle = $"Mods.{SilkenSisters.Id}";
+        } 
     }
 }
