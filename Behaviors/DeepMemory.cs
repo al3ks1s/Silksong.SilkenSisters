@@ -25,14 +25,22 @@ namespace SilkenSisters.Behaviors
 
         private async Task Setup()
         {
-            getComponents();
-            setPosition();
-            disableCrustKingObjects();
-            editFSMTransition();
-            editPlayerData();
-            bypassToolPickup();
-            manageTransitionGates();
-            SilkenSisters.Log.LogMessage($"[DeepMemory.Setup] Done");
+            try
+            {
+                SilkenSisters.Log.LogMessage($"[DeepMemory.Setup] Started setting deep memory up");
+                getComponents();
+                setPosition();
+                disableCrustKingObjects();
+                editFSMTransition();
+                editPlayerData();
+                bypassToolPickup();
+                manageTransitionGates();
+                SilkenSisters.Log.LogMessage($"[DeepMemory.Setup] Done");
+            }
+            catch (Exception e)
+            {
+                SilkenSisters.Log.LogError($"{e} {e.Message}");
+            }
         }
 
         private void getComponents()
@@ -123,11 +131,19 @@ namespace SilkenSisters.Behaviors
 
         private async Task Setup()
         {
-            getComponents();
-            setName();
-            setPosition();
-            editFSM();
-            SilkenSisters.Log.LogMessage($"[WakeUpMemory.Setup] Finished");
+            try
+            {
+                SilkenSisters.Log.LogMessage($"[WakeUpMemory.Setup] Started setting wakeup transition up");
+                getComponents();
+                setName();
+                setPosition();
+                editFSM();
+                SilkenSisters.Log.LogMessage($"[WakeUpMemory.Setup] Finished");
+            }
+            catch (Exception e)
+            {
+                SilkenSisters.Log.LogError($"{e} {e.Message}");
+            }
         }
 
         private void getComponents()
@@ -159,7 +175,7 @@ namespace SilkenSisters.Behaviors
             InvokeMethod inv3 = new InvokeMethod(enableIsMemory);
             _control.AddAction("Take Control", inv3);
 
-            InvokeMethod inv = new InvokeMethod(SilkenSisters.plugin.setupFight);
+            InvokeMethod inv = new InvokeMethod(SilkenSisters.plugin.setupMemoryFight);
             _control.AddAction("Take Control", inv);
 
             _control.GetAction<ConvertBoolToFloat>("Fade Up", 1).falseValue = 3f;
@@ -209,10 +225,19 @@ namespace SilkenSisters.Behaviors
 
         private async Task Setup()
         {
-            getComponents();
-            setName();
-            setPosition();
-            editFSM();
+           try
+           {
+                SilkenSisters.Log.LogMessage($"[WakeUpRespawn.Setup] Started setting WakeUpRespawn up");
+                getComponents();
+                setName();
+                setPosition();
+                editFSM();
+                SilkenSisters.Log.LogMessage($"[WakeUpRespawn.Setup] Finished");
+            }
+            catch (Exception e)
+            {
+                SilkenSisters.Log.LogError($"{e} {e.Message}");
+            }
         }
 
         private void getComponents()

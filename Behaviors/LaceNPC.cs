@@ -24,13 +24,20 @@ namespace SilkenSisters.Behaviors
 
         private async Task Setup()
         {
-            SilkenSisters.Log.LogMessage($"[LaceNPC.Setup] Spawning lace on the organ bench");
-            register();
-            getComponents();
-            disableRangeDetection();
-            setPosition();
-            editFSMAnimations();
-            SilkenSisters.Log.LogMessage($"[LaceNPC.Setup] Finished setting up LaceNPC");
+            try
+            {
+                SilkenSisters.Log.LogMessage($"[LaceNPC.Setup] Spawning lace on the organ bench");
+                register();
+                getComponents();
+                disableRangeDetection();
+                setPosition();
+                editFSMAnimations();
+                SilkenSisters.Log.LogMessage($"[LaceNPC.Setup] Finished setting up LaceNPC");
+            }
+            catch (Exception e)
+            {
+                SilkenSisters.Log.LogError($"{e} {e.Message}");
+            }
         }
 
         private void register()

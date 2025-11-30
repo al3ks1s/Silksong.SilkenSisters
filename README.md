@@ -23,7 +23,7 @@ For now, the bosses have their vanilla behaviors, there will probably be work on
 
 This mod requires the following mods to function: 
 - BepinEx version 5.4.2304 
-- FSMUtils 0.3.1
+- FSMUtils 0.3.3
 - I18N 1.0.2
 
 1. Download BepinEx and extract it in the game's directory
@@ -40,5 +40,5 @@ BepInEx/
 			<SilkenSisters files>
 		silksong_modding-I18N-1.0.2/
 			<I18N files>
-		﻿﻿silksong_modding-Silksong_FsmUtil-0.3.1/
+		﻿﻿silksong_modding-FsmUtil-0.3.3/
 		﻿﻿﻿﻿	<FSMUtil files>

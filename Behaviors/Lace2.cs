@@ -1,4 +1,6 @@
-﻿using HutongGames.PlayMaker.Actions;
+﻿using HarmonyLib;
+using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using SilkenSisters.SceneManagement;
 using Silksong.FsmUtil;
 using System;
@@ -10,6 +12,7 @@ using static UnityEngine.UI.GridLayoutGroup;
 
 namespace SilkenSisters.Behaviors
 {
+
     internal class Lace2 : MonoBehaviour
     {
 
@@ -24,16 +27,21 @@ namespace SilkenSisters.Behaviors
 
         private async Task Setup()
         {
-            SilkenSisters.Log.LogMessage($"[Lace2.Setup] Started setting up Lace");
-            getComponents();
-            disableParticleEffects();
-            editPositionConstraint();
-            rerouteState();
-            fixActionsPositions();
-            disableTitleCard();
-            fixWallRangeAlert();
-            setLaceFacing();
-            SilkenSisters.Log.LogMessage($"[Lace2.Setup] Finished setting up Lace");
+            try { 
+                SilkenSisters.Log.LogMessage($"[Lace2.Setup] Started setting up Lace");
+                getComponents();
+                disableParticleEffects();
+                editPositionConstraint();
+                rerouteState();
+                fixActionsPositions();
+                disableTitleCard();
+                fixWallRangeAlert();
+                setLaceFacing();
+                prepareSync();
+                SilkenSisters.Log.LogMessage($"[Lace2.Setup] Finished setting up Lace");
+            } catch (Exception e) {
+                SilkenSisters.Log.LogError($"{e} {e.Message}");
+            }
         }
 
         private void getComponents()
@@ -192,6 +200,28 @@ namespace SilkenSisters.Behaviors
 
             SilkenSisters.Log.LogInfo($"[Lace2.setLaceFacing] Facing Action:{_control.GetStateAction("Init", 4).GetType()}");
             SilkenSisters.Log.LogInfo($"[Lace2.Refight Engarde] Base facing active?:{_control.GetStateAction("Refight Engarde", 0).active}");
+        }
+
+        private void prepareSync()
+        {
+            if (SilkenSisters.syncedFight.Value) { 
+
+                SilkenSisters.Log.LogMessage($"[Lace.prepareSync] Adding a Sync state");
+                _control.AddState("SilkenSync");
+
+                if (FsmEvent.GetFsmEvent("LACE_SYNC") == null)
+                {
+                    FsmEvent laceSync = new FsmEvent("LACE_SYNC");
+                    FsmEvent.AddFsmEvent(laceSync);
+                }
+
+                SilkenSisters.Log.LogMessage($"[Lace.prepareSync] Added a sync event");
+
+                _control.ChangeTransition("Evade Move", "FINISHED", "Idle");
+                _control.ChangeTransition("CrossSlash?", "FINISHED", "SilkenSync");
+
+                _control.AddTransition("SilkenSync", "LACE_SYNC", "Distance Check");
+            }
         }
     }
 

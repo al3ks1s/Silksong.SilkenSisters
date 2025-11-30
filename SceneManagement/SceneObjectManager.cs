@@ -9,11 +9,16 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine.AddressableAssets;
+using Unity.Jobs;
+using Unity.Collections;
 
 namespace SilkenSisters.SceneManagement
 {
+
     internal static class SceneObjectManager
     {
+        
         public static string sceneFolder = Path.Combine(
             Application.streamingAssetsPath,
             "aa",
@@ -54,7 +59,7 @@ namespace SilkenSisters.SceneManagement
             return go_copy;
         }
 
-        public static GameObject findObjectInScene(Scene scene, string objectToRetrieve)
+        public static GameObject? findObjectInScene(this Scene scene, string objectToRetrieve)
         {
             int objectIndex = 0;
             string[] objectHierarchy = objectToRetrieve.Split("/");
@@ -77,12 +82,12 @@ namespace SilkenSisters.SceneManagement
             return cur_obj;  
         }
 
-        public static GameObject findObjectInCurrentScene(string objectToRetrieve)
+        public static GameObject? findObjectInCurrentScene(string objectToRetrieve)
         {
             return findObjectInScene(SceneManager.GetActiveScene(), objectToRetrieve);
         }
 
-        public static GameObject findChildObject(GameObject obj, string childObj)
+        public static GameObject? findChildObject(this GameObject obj, string childObj)
         {
             int objectIndex = 0;
             string[] objectHierarchy = childObj.Split("/");

@@ -1,5 +1,11 @@
 # Changelog 
 
+## 0.2.3
+
+- Changed the dependency string to new FSMUtil package
+
+- Prepared Lace1 fight, will be enabled in a future update
+
 ## 0.2.2
 
 - Mitigated a bug that caused Lace to fall under the floor

@@ -18,11 +18,18 @@ namespace SilkenSisters.Behaviors
 
         private async Task Setup()
         {
-            SilkenSisters.Log.LogMessage($"[ChallengeRegion.Setup] Started setting up info prompt");
-            getComponents();
-            setPosition();
-            setText();
-            SilkenSisters.Log.LogMessage($"[ChallengeRegion.Setup] Finished setting up info prompt");
+            try
+            {
+                SilkenSisters.Log.LogMessage($"[ChallengeRegion.Setup] Started setting up info prompt");
+                getComponents();
+                setPosition();
+                setText();
+                SilkenSisters.Log.LogMessage($"[ChallengeRegion.Setup] Finished setting up info prompt");
+            }
+            catch (Exception e)
+            {
+                SilkenSisters.Log.LogError($"{e} {e.Message}");
+            }
         }
 
         private void getComponents()
