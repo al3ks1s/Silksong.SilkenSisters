@@ -299,11 +299,18 @@ namespace SilkenSisters.Behaviors
 
         private async Task Setup()
         {
-            getComponents();
-            disableAreaDetection();
-            editFSMEvents();
-            editBossTitle();
-            setupHornetControl();
+            try
+            {
+                getComponents();
+                disableAreaDetection();
+                editFSMEvents();
+                editBossTitle();
+                setupHornetControl();
+            }
+            catch (Exception e)
+            {
+                SilkenSisters.Log.LogError($"{e} {e.Message}");
+            }
         }
 
         private void getComponents()
@@ -319,22 +326,42 @@ namespace SilkenSisters.Behaviors
 
         private void editFSMEvents()
         {
-            SilkenSisters.Log.LogMessage($"[PhantomBoss.editFSMEvents] Trigger lace jump");
-            SendEventByName lace_jump_event = new SendEventByName();
-            lace_jump_event.sendEvent = "ENTER";
-            lace_jump_event.delay = 0;
 
             FsmEventTarget target = new FsmEventTarget();
             target.gameObject = SilkenSisters.plugin.laceNPCFSMOwner;
             target.target = FsmEventTarget.EventTarget.GameObject;
 
-            lace_jump_event.eventTarget = target;
+            SilkenSisters.Log.LogMessage($"[PhantomBoss.editFSMEvents] Trigger lace sit up");
+            SendEventByName lace_stand_event = new SendEventByName();
+            lace_stand_event.sendEvent = "ENTER";
+            lace_stand_event.delay = 0;
+            lace_stand_event.eventTarget = target;
+            _control.AddAction("Organ Hit", lace_stand_event);
 
-            _control.AddAction("Organ Hit", lace_jump_event);
+            _control.GetAction<Tk2dPlayAnimationWithEvents>("Organ Hit", 0).animationTriggerEvent = FsmEvent.GetFsmEvent("SOMETHINGELSE");
+            _control.GetAction<Tk2dPlayAnimationWithEvents>("Organ Hit", 0).animationCompleteEvent = FsmEvent.GetFsmEvent("FINISHED");
+            _control.AddIntVariable("Dummy");
+
+            FsmOwnerDefault PhantomOrganOwner = new FsmOwnerDefault();
+            PhantomOrganOwner.OwnerOption = OwnerDefaultOption.SpecifyGameObject;
+            PhantomOrganOwner.GameObject = gameObject.FindChild("Organ Phantom");
+
+            Tk2dPauseAnimation pausePhantom = new Tk2dPauseAnimation();
+            pausePhantom.gameObject = PhantomOrganOwner;
+            pausePhantom.pause = true;
+            _control.AddAction("Organ Hit", pausePhantom);
+
+
+            SilkenSisters.Log.LogMessage($"[PhantomBoss.editFSMEvents] Trigger lace jump");
+            SendEventByName lace_jump_event = new SendEventByName();
+            lace_jump_event.sendEvent = "JUMP";
+            lace_jump_event.delay = 0.2f;
+            lace_jump_event.eventTarget = target;
+            _control.AddAction("Organ Note", lace_jump_event);
+            //_control.AddAction("BG Fog", lace_jump_event);
 
             FunctionCall fLeft = new FunctionCall();
             fLeft.FunctionName = "FaceLeft";
-
             SendMessage hornetFaceLeft = new SendMessage();
             hornetFaceLeft.gameObject = SilkenSisters.hornetFSMOwner;
             hornetFaceLeft.delivery = 0;
@@ -342,11 +369,14 @@ namespace SilkenSisters.Behaviors
             hornetFaceLeft.functionCall = fLeft;
             _control.AddAction("BG Fog", hornetFaceLeft);
 
+
             Tk2dPlayAnimation hornetChall = new Tk2dPlayAnimation();
             hornetChall.gameObject = SilkenSisters.hornetFSMOwner;
             hornetChall.clipName = "Challenge Talk Start";
             hornetChall.animLibName = "";
             _control.AddAction("BG Fog", hornetChall);
+
+            _control.GetAction<Wait>("Organ Note", 3).time = 0.3f;
 
         }
 
@@ -389,6 +419,9 @@ namespace SilkenSisters.Behaviors
             _control.GetAction<DisplayBossTitle>("Start Battle", 3).bossTitle = "SILKEN_SISTERS";
             SilkenSisters.Log.LogInfo($"[PhantomBoss.editBossTitle] NewTitleBase:{_control.GetAction<DisplayBossTitle>("Start Battle", 3).bossTitle}");
         }
+        
+    
+    
     }
 
 }

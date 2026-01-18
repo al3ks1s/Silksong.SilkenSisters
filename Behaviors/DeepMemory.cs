@@ -3,6 +3,7 @@ using HutongGames.PlayMaker.Actions;
 using Silksong.FsmUtil;
 using Silksong.UnityHelper.Extensions;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -172,6 +173,9 @@ namespace SilkenSisters.Behaviors
             InvokeMethod inv3 = new InvokeMethod(enableIsMemory);
             _control.AddAction("Take Control", inv3);
 
+            InvokeMethod inv4 = new InvokeMethod(recordHeroState);
+            _control.AddAction("Take Control", inv4);
+
             InvokeMethod inv = new InvokeMethod(SilkenSisters.plugin.setupMemoryFight);
             _control.AddAction("Take Control", inv);
 
@@ -210,6 +214,19 @@ namespace SilkenSisters.Behaviors
             GameObject.Instantiate(gildedDoor).transform.SetPosition3D(67.0862f, 8.5155f, 0.003f);
         }
 
+        private void recordHeroState()
+        {
+
+            HeroController.instance.RefillSilkToMaxSilent();
+
+            if (!PlayerData.instance.HasStoredMemoryState)
+            {
+                PlayerData.instance.PreMemoryState = HeroItemsState.Record(HeroController.instance);
+                PlayerData.instance.HasStoredMemoryState = true;
+                PlayerData.instance.CaptureToolAmountsOverride();
+            }
+        }
+
     }
 
     internal class WakeUpRespawn : MonoBehaviour
@@ -230,11 +247,11 @@ namespace SilkenSisters.Behaviors
                 setPosition();
                 editFSM();
                 SilkenSisters.Log.LogMessage($"[WakeUpRespawn.Setup] Finished");
-            }
-            catch (Exception e)
-            {
-                SilkenSisters.Log.LogError($"{e} {e.Message}");
-            }
+           }
+           catch (Exception e)
+           {
+            SilkenSisters.Log.LogError($"{e} {e.Message}");
+           }
         }
 
         private void getComponents()
@@ -258,8 +275,8 @@ namespace SilkenSisters.Behaviors
             PlayMakerFSM respawnFSM = gameObject.GetFsmPreprocessed("Wake Up");
             respawnFSM.DisableAction("Save?", 1);
 
-            InvokeMethod replenishTool = new InvokeMethod(replenishTools);
-            // respawnFSM.AddAction("End", replenishTool);
+            InvokeMethod restoreHeroAction = new InvokeMethod(restoreHeroState);
+            respawnFSM.AddAction("Fade Up", restoreHeroAction);
 
             InvokeMethod inv3 = new InvokeMethod(disableDoor);
             respawnFSM.AddAction("End", inv3);
@@ -283,19 +300,13 @@ namespace SilkenSisters.Behaviors
             SilkenSisters.Log.LogInfo($"[WakeUpRespawn.disableSelf] {gameObject.activeSelf}");
         }
 
-        private void replenishTools()
+        private void restoreHeroState()
         {
-            SilkenSisters.Log.LogInfo("Replenishing tools");
-            foreach (ToolItem tool in ToolItemManager.GetCurrentEquippedTools())
-            {
-                if (tool.IsAttackType())
-                {
-                    SilkenSisters.Log.LogWarning($"{tool.GetName()}");
-                    float outCost;
-                    int outReserve;
-                    tool.TryReplenishSingle(true, 0, out outCost, out outReserve);
-                    SilkenSisters.Log.LogWarning($"{outCost} {outReserve}");
-                }
+            if (PlayerData.instance.HasStoredMemoryState) { 
+                HeroController.instance.ClearEffectsInstant();
+                PlayerData.instance.PreMemoryState.Apply(HeroController.instance);
+                PlayerData.instance.HasStoredMemoryState = false;
+                PlayerData.instance.ClearToolAmountsOverride();
             }
         }
     }

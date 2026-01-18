@@ -4,37 +4,24 @@ using BepInEx.Logging;
 using HarmonyLib;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using Newtonsoft.Json;
 using SilkenSisters.Behaviors;
-using Silksong.AssetHelper;
 using Silksong.AssetHelper.Core;
 using Silksong.AssetHelper.ManagedAssets;
 using Silksong.AssetHelper.Plugin;
 using Silksong.FsmUtil;
 using Silksong.UnityHelper.Extensions;
 using System;
-using System;
-using System.Collections;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.IO;
-using System.Linq;
 using System.Linq;
 using System.Threading.Tasks;
 using TeamCherry.Localization;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
-using Newtonsoft.Json;
-using Silksong.AssetHelper.Core;
+
 // Idea by AidaCamelia0516
 
 // Challenge : Cradle_03 - Boss Scene/Intro Sequence
@@ -136,32 +123,37 @@ namespace SilkenSisters
     [BepInAutoPlugin(id: "io.github.al3ks1s.silkensisters")]
     [BepInDependency("org.silksong-modding.fsmutil")]
     [BepInDependency("org.silksong-modding.i18n")]
-    [BepInDependency("io.github.flibber-hk.assethelper")]
+    [BepInDependency("org.silksong-modding.assethelper")]
     [BepInDependency("io.github.flibber-hk.filteredlogs", BepInDependency.DependencyFlags.SoftDependency)]
 
     public partial class SilkenSisters : BaseUnityPlugin
     {
 
-        public List<AddressableAsset<GameObject>> _individualAssets = new List<AddressableAsset<GameObject>>();
+        public List<ManagedAsset<GameObject>> _individualAssets = new List<ManagedAsset<GameObject>>();
         public static SilkenSisters plugin;
 
         public static Scene organScene;
 
-        public AddressableAsset<GameObject> laceNPCCache = null;
-        public AddressableAsset<GameObject> lace2BossSceneCache = null;
-        public AddressableAsset<GameObject> lace1BossSceneCache = null;
+        public ManagedAsset<GameObject> laceNPCCache = null;
+        public ManagedAsset<GameObject> silkfliesCache = null;
+        public ManagedAsset<GameObject> lace2BossSceneCache = null;
+        public ManagedAsset<GameObject> lace1BossSceneCache = null;
 
-        public AddressableAsset<GameObject> challengeDialogCache = null;
-        public AddressableAsset<GameObject> wakeupPointCache = null;
-        public AddressableAsset<GameObject> coralBossSceneCache = null;
-        public AddressableAsset<GameObject> deepMemoryCache = null;
+        public ManagedAsset<GameObject> challengeDialogCache = null;
+        public ManagedAsset<GameObject> wakeupPointCache = null;
+        public ManagedAsset<GameObject> coralBossSceneCache = null;
+        public ManagedAsset<GameObject> deepMemoryCache = null;
+        public ManagedAsset<GameObject> wisp = null;
+        public ManagedAsset<IAssetBundleResource> wispbundle = null;
 
-        public AddressableAsset<GameObject> infoPromptCache = null;
+        public ManagedAsset<GameObject> infoPromptCache = null;
 
         public FsmState ExitMemoryCache = null;
 
         public GameObject laceNPCInstance = null;
         public FsmOwnerDefault laceNPCFSMOwner = null;
+
+        public GameObject silkflies = null;
 
         public GameObject laceBossInstance = null;
         public GameObject laceBossSceneInstance = null;
@@ -185,8 +177,6 @@ namespace SilkenSisters
         public static FsmOwnerDefault hornetFSMOwner = null;
         public static ConstrainPosition hornetConstrain = null;
 
-
-        private string laceBossPrefabName = null;
         internal static ManualLogSource Log;
 
         private ConfigEntry<KeyCode> modifierKey;
@@ -232,16 +222,20 @@ namespace SilkenSisters
 
         private void requestAssets()
         {
-            laceNPCCache = AddressableAsset<GameObject>.FromSceneAsset("Coral_19", "Encounter Scene Control/Lace Meet/Lace NPC Blasted Bridge");
-            lace2BossSceneCache = AddressableAsset<GameObject>.FromSceneAsset("Song_Tower_01", "Boss Scene");
-            lace1BossSceneCache = AddressableAsset<GameObject>.FromSceneAsset("Bone_East_12", "Boss Scene");
+            laceNPCCache = ManagedAsset<GameObject>.FromSceneAsset("Coral_19", "Encounter Scene Control/Lace Meet/Lace NPC Blasted Bridge");
+            lace2BossSceneCache = ManagedAsset<GameObject>.FromSceneAsset("Song_Tower_01", "Boss Scene");
+            lace1BossSceneCache = ManagedAsset<GameObject>.FromSceneAsset("Bone_East_12", "Boss Scene");
+            silkfliesCache = ManagedAsset<GameObject>.FromSceneAsset("Bone_East_12", "Boss Scene/Silkflies");
 
-            challengeDialogCache = AddressableAsset<GameObject>.FromSceneAsset("Cradle_03", "Boss Scene/Intro Sequence");
-            wakeupPointCache = AddressableAsset<GameObject>.FromSceneAsset("Memory_Coral_Tower", "Door Get Up");
-            coralBossSceneCache = AddressableAsset<GameObject>.FromSceneAsset("Memory_Coral_Tower", "Boss Scene");
-            deepMemoryCache = AddressableAsset<GameObject>.FromSceneAsset("Coral_Tower_01", "Memory Group");
+            challengeDialogCache = ManagedAsset<GameObject>.FromSceneAsset("Cradle_03", "Boss Scene/Intro Sequence");
+            wakeupPointCache = ManagedAsset<GameObject>.FromSceneAsset("Memory_Coral_Tower", "Door Get Up");
+            coralBossSceneCache = ManagedAsset<GameObject>.FromSceneAsset("Memory_Coral_Tower", "Boss Scene");
+            deepMemoryCache = ManagedAsset<GameObject>.FromSceneAsset("Coral_Tower_01", "Memory Group");
 
-            infoPromptCache = AddressableAsset<GameObject>.FromSceneAsset("Arborium_01", "Inspect Region");
+            infoPromptCache = ManagedAsset<GameObject>.FromSceneAsset("Arborium_01", "Inspect Region");
+
+            wisp = ManagedAsset<GameObject>.FromSceneAsset("Wisp_02", "Wisp Bounce Pod");
+            wispbundle = new(AddressablesData.ToBundleKey("textures_assets_areabellareawispsprintmaster"));
         }
 
         private IEnumerator WaitAndPatch()
@@ -249,7 +243,7 @@ namespace SilkenSisters
             yield return new WaitForSeconds(2f); // Give game time to init Language
             Harmony.CreateAndPatchAll(typeof(Language_Get_Patch));
         }
-
+        
         /*
         [HarmonyPostfix]
         [HarmonyPatch(typeof(tk2dSpriteAnimator), "Start")]
@@ -369,7 +363,7 @@ namespace SilkenSisters
                 SilkenSisters.Log.LogInfo("Finished setting up corpse handler");
             }
 
-            if (__instance.Fsm.GameObject.name == "Lace Boss2 New" && __instance.Fsm.Name == "Control")
+            if (__instance.Fsm.GameObject.name == "Lace NPC Blasted Bridge(Clone)" && __instance.Fsm.Name == "Control")
             {
                 SilkenSisters.Log.LogInfo($"[StateListen] {__instance.Name}");
             }
@@ -469,7 +463,7 @@ namespace SilkenSisters
 
             Stopwatch sw = Stopwatch.StartNew();
 
-            List<AddressableAsset<GameObject>> _individualAssets = new List<AddressableAsset<GameObject>>
+            List<ManagedAsset<GameObject>> _individualAssets = new List<ManagedAsset<GameObject>>
             {
                 laceNPCCache,
                 lace2BossSceneCache,
@@ -478,7 +472,8 @@ namespace SilkenSisters
                 wakeupPointCache,
                 coralBossSceneCache,
                 deepMemoryCache,
-                infoPromptCache
+                infoPromptCache,
+                silkfliesCache
             };
 
             if ( !_individualAssets.All(x => x.HasBeenLoaded)) { 
@@ -494,7 +489,7 @@ namespace SilkenSisters
                 PlayMakerFSM control = bossScene.GetFsmPreprocessed("Control");
                 ExitMemoryCache = control.GetState("Exit Memory");
                 GameObject.Destroy(bossScene);
-                Logger.LogInfo($"[cacheGameObjects] {ExitMemoryCache.name}, {ExitMemoryCache.actions.Length}");
+                //Logger.LogInfo($"[cacheGameObjects] {ExitMemoryCache.name}, {ExitMemoryCache.actions.Length}");
 
                 sw.Stop();
             }
@@ -503,13 +498,13 @@ namespace SilkenSisters
             Logger.LogMessage("[cacheGameObjects] Caching done");
             
         }
-       
+        
         private void onSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             Logger.LogInfo($"[onSceneLoaded] Scene loaded : {scene.name}, active scene : {SceneManager.GetActiveScene()}, Path:{scene.path}");
 
             string[] excludedScenes = new string[]{ "Menu_Title", "Pre_Menu_Loader", "Pre_Menu_Intro", "Quit_To_Menu" };
-
+            
             if (!cachingSceneObjects) { 
                 if (scene.name == "Organ_01")
                 {
@@ -523,8 +518,6 @@ namespace SilkenSisters
                     Logger.LogMessage($"[onSceneLoaded] Scene is not organ, clearing instances and cache");
                     clearInstances();
                 }
-
-            
             }
 
             if (scene.name == "Quit_To_Menu")
@@ -533,38 +526,6 @@ namespace SilkenSisters
                 clearCache();
             }
         }
-
-        private IEnumerator testLoading()
-        {
-
-            laceNPCCache = AddressableAsset<GameObject>.FromSceneAsset("Coral_19", "Encounter Scene Control/Lace Meet/Lace NPC Blasted Bridge");
-            lace2BossSceneCache = AddressableAsset<GameObject>.FromSceneAsset("Song_Tower_01", "Boss Scene");
-            lace1BossSceneCache = AddressableAsset<GameObject>.FromSceneAsset("Bone_East_12", "Boss Scene");
-
-            challengeDialogCache = AddressableAsset<GameObject>.FromSceneAsset("Cradle_03", "Boss Scene/Intro Sequence");
-            wakeupPointCache = AddressableAsset<GameObject>.FromSceneAsset("Memory_Coral_Tower", "Door Get Up");
-            coralBossSceneCache = AddressableAsset<GameObject>.FromSceneAsset("Memory_Coral_Tower", "Boss Scene");
-            deepMemoryCache = AddressableAsset<GameObject>.FromSceneAsset("Coral_Tower_01", "Memory Group");
-
-            infoPromptCache = AddressableAsset<GameObject>.FromSceneAsset("Arborium_01", "Inspect Region");
-
-            IList<string> keys =
-            new List<string>{
-                CatalogKeys.GetKeyForSceneAsset("Coral_19", "Encounter Scene Control/Lace Meet/Lace NPC Blasted Bridge"),
-                CatalogKeys.GetKeyForSceneAsset("Song_Tower_01", "Boss Scene"),
-                CatalogKeys.GetKeyForSceneAsset("Bone_East_12", "Boss Scene"),
-                CatalogKeys.GetKeyForSceneAsset("Cradle_03", "Boss Scene/Intro Sequence"),
-                CatalogKeys.GetKeyForSceneAsset("Memory_Coral_Tower", "Door Get Up"),
-                CatalogKeys.GetKeyForSceneAsset("Memory_Coral_Tower", "Boss Scene"),
-                CatalogKeys.GetKeyForSceneAsset("Coral_Tower_01", "Memory Group"),
-                CatalogKeys.GetKeyForSceneAsset("Arborium_01", "Inspect Region")
-            };
-            Stopwatch sw = Stopwatch.StartNew();
-            yield return Addressables.LoadAssetsAsync<GameObject>(keys, obj => {}, Addressables.MergeMode.Union);
-            sw.Stop();
-            Log.LogInfo($"Loading as a group took {sw.ElapsedMilliseconds}ms");
-        }
-
         private IEnumerator preloadOrgan()
         {
 
@@ -602,14 +563,16 @@ namespace SilkenSisters
             if (eff != null)
             {
                 Logger.LogMessage("[preloadOrgan] Deleting leftover memory effect");
-                GameObject.Destroy(eff);
+                eff.transform.SetPosition2D(-100,-100);
             }
         }
+
 
         private void clearInstances()
         {
             laceNPCInstance = null;
             laceNPCFSMOwner = null;
+            silkflies = null;
 
             laceBossInstance = null;
             laceBossSceneInstance = null;
@@ -649,6 +612,8 @@ namespace SilkenSisters
             }
 
             laceNPCCache.Unload();
+            silkfliesCache.Unload();
+            
             lace2BossSceneCache.Unload();
             lace1BossSceneCache.Unload();
 
@@ -742,6 +707,14 @@ namespace SilkenSisters
             laceNPCInstance = laceNPCCache.InstantiateAsset();
             laceNPCInstance.AddComponent<LaceNPC>();
             laceNPCInstance.SetActive(true);
+
+
+            // ----------
+            silkflies = silkfliesCache.InstantiateAsset();
+            silkflies.SetActive(false);
+            silkflies.AddComponent<SilkFlies>();
+            silkflies.SetActive(true);
+
 
             // ----------
             Logger.LogInfo($"[setupFight] Trying to set up phantom : phantom available? {phantomBossScene != null}");
@@ -848,6 +821,19 @@ namespace SilkenSisters
             {
                 spawnLaceBoss2();
             }
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                PlayerData.instance.PreMemoryState = HeroItemsState.Record(HeroController.instance);
+                PlayerData.instance.HasStoredMemoryState = true;
+                PlayerData.instance.CaptureToolAmountsOverride();
+            }
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                HeroController.instance.ClearEffectsInstant();
+                PlayerData.instance.PreMemoryState.Apply(HeroController.instance);
+                PlayerData.instance.HasStoredMemoryState = false;
+                PlayerData.instance.ClearToolAmountsOverride();
+            }
 
             if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.H))
             {
@@ -872,8 +858,7 @@ namespace SilkenSisters
 
             if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.Keypad2))
             {
-                StartCoroutine(testLoading());
-                //toggleLaceFSM();
+                toggleLaceFSM();
             }
 
             if (Input.GetKey(modifierKey.Value) && Input.GetKeyDown(KeyCode.Keypad8))
@@ -918,9 +903,22 @@ namespace SilkenSisters
                     $"Act3:{PlayerData._instance.blackThreadWorld}");
             }
         }
+        public IEnumerator testwisp()
+        {
+            yield return wispbundle.Load();
+            yield return wisp.Load();
+            var w = wisp.InstantiateAsset();
+            w.transform.position = SilkenSisters.hornet.transform.position;
+            DontDestroyOnLoad(w);
+        }
+        public void releasewisp()
+        {
+            wisp.Unload();
+        }
+
     }
 
-    
+
     // Title cards
     [HarmonyPatch(typeof(Language), "Get")]
     [HarmonyPatch(new[] { typeof(string), typeof(string) })]

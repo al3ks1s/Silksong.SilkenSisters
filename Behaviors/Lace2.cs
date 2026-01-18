@@ -269,4 +269,9 @@ namespace SilkenSisters.Behaviors
             gameObject.FindChild("Centre").transform.position = new Vector3(84.5f, 104f, 0f);
         }
     }
+
+    internal class LaceCorpse : MonoBehaviour
+    {
+    }
+
 }
