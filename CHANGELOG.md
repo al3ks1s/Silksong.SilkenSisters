@@ -1,5 +1,14 @@
 # Changelog 
 
+## 0.3.0
+
+- Changed backend object management to use AssetHelper and Unity Helper
+
+- Lace can now conduct silkflies, or not, it depends
+- Tools/Silk/Health are now properly replenished on memory exit or death
+
+- Preparations for non-memory fight
+
 ## 0.2.4
 
 - Fixed Hornet's facing on challenge cutscene

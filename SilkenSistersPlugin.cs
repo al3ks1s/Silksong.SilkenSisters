@@ -279,7 +279,6 @@ namespace SilkenSisters
 
                 SilkenSisters.Log.LogInfo($"[DeathListener] Hornet died in memory, variable reset: defeatedPhantom:{PlayerData._instance.defeatedPhantom}, blackThreadWorld:{PlayerData._instance.blackThreadWorld}");
 
-                //nonLethal = true;
             }
         }
 
