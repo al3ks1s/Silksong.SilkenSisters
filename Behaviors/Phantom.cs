@@ -100,8 +100,8 @@ namespace SilkenSisters.Behaviors
 
         private void listenForLaceDead()
         {
-            FsmGameObject laceBossVar = _control.AddGameObjectVariable("LaceBoss2");
-            laceBossVar.SetName("LaceBoss2");
+            FsmGameObject laceBossVar = _control.AddGameObjectVariable("LaceBoss");
+            laceBossVar.SetName("LaceBoss");
 
             FindGameObject laceObject = new FindGameObject();
             laceObject.objectName = $"{SilkenSisters.plugin.laceBossInstance.name}";
@@ -321,7 +321,7 @@ namespace SilkenSisters.Behaviors
         private void disableAreaDetection()
         {
             ((PlayMakerUnity2DProxy)GetComponent(typeof(PlayMakerUnity2DProxy))).enabled = false;
-            ((BoxCollider2D)GetComponent(typeof(BoxCollider2D))).enabled = false;
+            //((BoxCollider2D)GetComponent(typeof(BoxCollider2D))).enabled = false;
         }
 
         private void editFSMEvents()
@@ -385,8 +385,8 @@ namespace SilkenSisters.Behaviors
             SilkenSisters.Log.LogMessage("[PhantomBoss.setupHornetControl] Setting actions to give back hornet control");
             SendMessage message_control_idle = new SendMessage();
             FunctionCall fc_control_idle = new FunctionCall();
-            fc_control_idle.FunctionName = "StartControlToIdle";
-
+            fc_control_idle.FunctionName = "StartControl";
+            
             message_control_idle.functionCall = fc_control_idle;
             message_control_idle.gameObject = SilkenSisters.hornetFSMOwner;
             message_control_idle.options = SendMessageOptions.DontRequireReceiver;

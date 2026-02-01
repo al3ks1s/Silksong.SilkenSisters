@@ -32,7 +32,7 @@ namespace SilkenSisters.Behaviors
                 fixActionsPositions();
                 disableTitleCard();
                 setLaceFacing();
-                prepareSync();
+                DisableMusic();
                 SilkenSisters.Log.LogMessage($"[Lace1.Setup] Finished setting up Lace");
             }
             catch (Exception e)
@@ -116,6 +116,11 @@ namespace SilkenSisters.Behaviors
             SilkenSisters.Log.LogInfo($"[Lace1.disableTitleCard] " +
                 $"(Start Battle):{_control.GetStateAction("Start Battle", 3).active}");
 
+        }
+
+        private void DisableMusic()
+        {
+            _control.DisableAction("Start Battle", 1);
         }
 
         private void setLaceFacing()

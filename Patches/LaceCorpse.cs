@@ -74,6 +74,7 @@ namespace SilkenSisters.Patches
 
                 SilkenSisters.Log.LogDebug("Finished setting up corpse handler");
             }
+        
         }
 
 

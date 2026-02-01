@@ -1,5 +1,4 @@
-﻿using GenericVariableExtension;
-using HutongGames.PlayMaker;
+﻿using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using Silksong.FsmUtil;
 using Silksong.UnityHelper.Extensions;
@@ -39,7 +38,9 @@ namespace SilkenSisters.Behaviors
                 SetConductAnimation();
                 SkipDialogue();
                 EditDialog();
+                TakeHornetControl();
                 resumePhantom();
+                HornetLookAtLace();
                 SilkenSisters.Log.LogMessage($"[LaceNPC.Setup] Finished setting up LaceNPC");
             }
             catch (Exception e)
@@ -76,7 +77,6 @@ namespace SilkenSisters.Behaviors
         private void SetConductAnimation()
         {
 
-
             _control.AddAction("Init", new RandomBool { storeResult = _control.GetBoolVariable("IsConducting") });
             _control.AddAction("Init", new BoolTest { boolVariable = _control.GetBoolVariable("IsConducting"), isTrue = FsmEvent.GetFsmEvent("CONDUCT") });
             _control.AddAction("Init", new BoolTest { boolVariable = _control.GetBoolVariable("IsMemory"), isFalse = FsmEvent.GetFsmEvent("CONDUCT"), isTrue = FsmEvent.GetFsmEvent("FINISHED") });
@@ -105,6 +105,7 @@ namespace SilkenSisters.Behaviors
             _control.AddBoolVariable("IsNotConducting").Value = true;
             //_control.AddBoolVariable("IsMemory").Value = false;
             _control.AddBoolVariable("IsMemory").Value = SilkenSisters.isMemory();
+            _control.AddBoolVariable("IsNotMemory").Value = !SilkenSisters.isMemory();
         }
 
         private void EditDialog()
@@ -191,10 +192,49 @@ namespace SilkenSisters.Behaviors
             _control.GetBoolVariable("IsNotConducting").Value = false;
         }
 
+        private void TakeHornetControl()
+        {
+            SendMessage relinquishControl = new SendMessage
+            {
+                gameObject = SilkenSisters.hornetFSMOwner,
+                delivery = 0,
+                options = SendMessageOptions.DontRequireReceiver,
+                functionCall = new FunctionCall { FunctionName = "RelinquishControl" }
+            };
+            _control.AddAction("Take Control", relinquishControl);
+            SendMessage stopAnimation = new SendMessage
+            {
+                gameObject = SilkenSisters.hornetFSMOwner,
+                delivery = 0,
+                options = SendMessageOptions.DontRequireReceiver,
+                functionCall = new FunctionCall { FunctionName = "StopAnimationControl" }
+            };
+            _control.AddAction("Take Control", stopAnimation);
+        }
+
+        private void HornetLookAtLace()
+        {
+            _control.AddAction("Take Control", new FaceObjectV2
+            {
+                objectA = SilkenSisters.hornetFSMOwner,
+                objectB = SilkenSisters.plugin.laceNPCInstance,
+                newAnimationClip = "",
+                playNewAnimation = false,
+                spriteFacesRight = false,
+                resetFrame = false,
+                everyFrame = false,
+                pauseBetweenTurns = 0
+            });
+            _control.AddAction("Take Control", new tk2dPlayAnimationConditional { Target = SilkenSisters.hornetFSMOwner, AnimName = "Turn Back Three Quarter", Condition = _control.GetBoolVariable("IsNotMemory") });
+        }
+
+
         private void toggleChallenge()
         {
-            SilkenSisters.plugin.challengeDialogInstance.SetActive(!SilkenSisters.plugin.challengeDialogInstance.activeSelf);
-            SilkenSisters.Log.LogInfo($"[LaceNPC.toggleChallenge] challenge?:{SilkenSisters.plugin.challengeDialogInstance.activeSelf}");
+            if (SilkenSisters.isMemory()) { 
+                SilkenSisters.plugin.challengeDialogInstance.SetActive(false);
+                SilkenSisters.Log.LogInfo($"[LaceNPC.toggleChallenge] challenge?:{SilkenSisters.plugin.challengeDialogInstance.activeSelf}");
+            }
         }
 
         private void startConstrainHornet()
