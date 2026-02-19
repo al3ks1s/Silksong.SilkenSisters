@@ -19,7 +19,6 @@ namespace SilkenSisters.Behaviors
         private PlayMakerFSM _regionControl;
 
         private PlayMakerFSM _control;
-
         private void Awake()
         {
             Setup();

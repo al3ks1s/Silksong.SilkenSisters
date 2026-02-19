@@ -43,7 +43,7 @@ namespace SilkenSisters.Patches
         private static void setStateListener(FsmState __instance)
         {
 
-            if (__instance.Fsm.GameObject.name == "Lace NPC Blasted Bridge(Clone)" && __instance.Fsm.Name == "Control")
+            if (__instance.Fsm.GameObject.name == "Lace Boss2 New" && __instance.Fsm.Name == "Control")
             {
                 SilkenSisters.Log.LogInfo($"[StateListen] {__instance.Name}");
             }

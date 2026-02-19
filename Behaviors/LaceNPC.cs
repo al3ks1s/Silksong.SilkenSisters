@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using Silksong.AssetHelper.ManagedAssets;
 
 namespace SilkenSisters.Behaviors
 {
@@ -85,6 +86,7 @@ namespace SilkenSisters.Behaviors
             _control.AddTransition("Init", "CONDUCT", "Conduct");
             _control.AddTransition("Conduct", "FINISHED", "Dormant");
             _control.AddMethod("Conduct", setConductPosition);
+            _control.AddMethod("Conduct", SpawnFlies);
             
             _control.AddAction("Conduct", new Tk2dPlayAnimation { gameObject = SilkenSisters.plugin.laceNPCFSMOwner, animLibName = "", clipName = "Conduct" });
 
@@ -106,6 +108,8 @@ namespace SilkenSisters.Behaviors
             //_control.AddBoolVariable("IsMemory").Value = false;
             _control.AddBoolVariable("IsMemory").Value = SilkenSisters.isMemory();
             _control.AddBoolVariable("IsNotMemory").Value = !SilkenSisters.isMemory();
+            _control.AddBoolVariable("EncounteredLace1").Value = PlayerData.instance.encounteredLace1;
+
         }
 
         private void EditDialog()
@@ -164,6 +168,8 @@ namespace SilkenSisters.Behaviors
             _control.DisableAction("End", 4);
             _control.DisableAction("End", 5);
 
+            _control.AddAction("Look Up End", new HutongGames.PlayMaker.Actions.SetPlayerDataBool { boolName = "encounteredLace1", value = true });
+
         }
 
         private void SkipDialogue()
@@ -171,9 +177,11 @@ namespace SilkenSisters.Behaviors
 
             _control.AddTransition("Take Control", "SKIP", "Sit Up");
             _control.AddAction("Take Control", new BoolTestDelay { boolVariable = _control.GetBoolVariable("IsMemory"), isTrue = FsmEvent.GetFsmEvent("SKIP"), delay = 0.5f });
+            _control.AddAction("Take Control", new BoolTestDelay { boolVariable = _control.GetBoolVariable("EncounteredLace1"), isTrue = FsmEvent.GetFsmEvent("SKIP"), delay = 0.5f });
 
             _control.AddTransition("Sit Up", "SKIP", "Lace Ready");
             _control.AddAction("Sit Up", new BoolTest { boolVariable = _control.GetBoolVariable("IsMemory"), isTrue = FsmEvent.GetFsmEvent("SKIP") });
+            _control.AddAction("Sit Up", new BoolTest { boolVariable = _control.GetBoolVariable("EncounteredLace1"), isTrue = FsmEvent.GetFsmEvent("SKIP") });
             
         }
 
@@ -243,10 +251,19 @@ namespace SilkenSisters.Behaviors
             SilkenSisters.Log.LogInfo($"[LaceNPC.startConstrainHornet] constrainHornet?:{SilkenSisters.hornetConstrain.enabled}");
         }
 
+        private void SpawnFlies()
+        {
+            SilkenSisters.plugin.silkflies = SilkenSisters.plugin.silkfliesCache.InstantiateAsset();
+            SilkenSisters.plugin.silkflies.SetActive(false);
+            SilkenSisters.plugin.silkflies.AddComponent<SilkFlies>();
+            SilkenSisters.plugin.silkflies.SetActive(true);
+        }
+
         private void makeFliesLeave()
         {
-            SilkenSisters.plugin.silkflies.GetComponent<SilkFlies>().Leave();
-            SilkenSisters.Log.LogInfo($"[LaceNPC.startConstrainHornet] constrainHornet?:{SilkenSisters.hornetConstrain.enabled}");
+            if (SilkenSisters.plugin.silkflies != null) { 
+                SilkenSisters.plugin.silkflies.GetComponent<SilkFlies>().Leave();
+            }
         }
 
     }

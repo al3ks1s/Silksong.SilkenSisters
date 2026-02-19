@@ -205,12 +205,10 @@ namespace SilkenSisters.Behaviors
 
             HeroController.instance.RefillSilkToMaxSilent();
 
-            if (!PlayerData.instance.HasStoredMemoryState)
-            {
-                PlayerData.instance.PreMemoryState = HeroItemsState.Record(HeroController.instance);
-                PlayerData.instance.HasStoredMemoryState = true;
-                PlayerData.instance.CaptureToolAmountsOverride();
-            }
+            PlayerData.instance.PreMemoryState = HeroItemsState.Record(HeroController.instance);
+            PlayerData.instance.HasStoredMemoryState = true;
+            PlayerData.instance.CaptureToolAmountsOverride();
+
         }
 
     }

@@ -15,6 +15,7 @@ namespace SilkenSisters.Behaviors
         // Spawn pos : 78,7832 104,5677 0,004
         // Constraints left: 72,4, right: 96,52, bot: 104
         private PlayMakerFSM _control;
+        private HealthManager _healthManager;
 
         private void Awake()
         {
@@ -34,8 +35,13 @@ namespace SilkenSisters.Behaviors
                 fixWallRangeAlert(); 
                 disableLaceMusic();
                 setLaceFacing();
+                PrepareCorpse();
                 prepareSync();
+                SilkenSisters.Log.LogMessage($"Damage scaling: {_healthManager.damageScaling.Level1Mult} {_healthManager.damageScaling.Level2Mult} {_healthManager.damageScaling.Level3Mult} {_healthManager.damageScaling.Level4Mult} {_healthManager.damageScaling.Level5Mult} ");
                 SilkenSisters.Log.LogMessage($"[Lace2.Setup] Finished setting up Lace");
+
+                gameObject.SetActive(false);
+
             } catch (Exception e) {
                 SilkenSisters.Log.LogError($"{e} {e.Message}");
             }
@@ -46,6 +52,8 @@ namespace SilkenSisters.Behaviors
             gameObject.transform.position = new Vector3(78.2832f, 104.5677f, 0.004f);
             SilkenSisters.Log.LogInfo($"[Lace2.getComponents] position:{gameObject.transform.position}");
             _control = gameObject.GetFsmPreprocessed("Control");
+            _healthManager = gameObject.GetComponent<HealthManager>();
+            _healthManager.damageScaling = SilkenSisters.plugin.phantomBossScene.FindChild("Phantom").GetComponent<HealthManager>().damageScaling;
         }
 
         private void disableParticleEffects()
@@ -142,6 +150,7 @@ namespace SilkenSisters.Behaviors
             _control.GetAction<CheckXPosition>("Force L?", 1).compareTo = 96f;
             SilkenSisters.Log.LogInfo($"[Lace2.fixActionsPositions] Lace Dstab bounds: Left:{_control.GetAction<CheckXPosition>("Force R?", 2).compareTo}, Right:{_control.GetAction<CheckXPosition>("Force L?", 1).compareTo}");
 
+            _control.GetAction<FloatTestToBool>("CrossSlash Aim", 10);
 
             // ----- Bombs, unused attack for now
             _control.FindFloatVariable("Bomb Max X").Value = 96f;
@@ -206,27 +215,144 @@ namespace SilkenSisters.Behaviors
             SilkenSisters.Log.LogInfo($"[Lace2.Refight Engarde] Base facing active?:{_control.GetStateAction("Refight Engarde", 0).active}");
         }
 
+
+        private void PrepareCorpse()
+        {
+            SilkenSisters.Log.LogDebug("Started setting corpse handler");
+            GameObject laceCorpse = gameObject.FindChild("Corpse Lace2(Clone)");
+            GameObject laceCorpseNPC = laceCorpse.FindChild("NPC");
+            SilkenSisters.Log.LogDebug($"{laceCorpseNPC}");
+
+            SilkenSisters.Log.LogDebug("Fixing facing");
+            PlayMakerFSM laceCorpseFSM = FsmUtil.GetFsmPreprocessed(laceCorpse, "Control");
+            laceCorpseFSM.GetAction<CheckXPosition>("Set Facing", 0).compareTo = 72;
+            laceCorpseFSM.GetAction<CheckXPosition>("Set Facing", 1).compareTo = 96;
+
+            SilkenSisters.Log.LogDebug("Disabling interact action");
+            laceCorpseFSM.DisableAction("NPC Ready", 0);
+            SendEventByName lace_death_event = new SendEventByName();
+            lace_death_event.sendEvent = "INTERACT";
+            lace_death_event.delay = 0f;
+            FsmOwnerDefault owner = new FsmOwnerDefault();
+            owner.gameObject = laceCorpseNPC;
+            owner.ownerOption = OwnerDefaultOption.SpecifyGameObject;
+
+            FsmEventTarget target = new FsmEventTarget();
+            target.gameObject = owner;
+            target.target = FsmEventTarget.EventTarget.GameObject;
+            lace_death_event.eventTarget = target;
+            laceCorpseFSM.AddAction("NPC Ready", lace_death_event);
+
+            SilkenSisters.Log.LogDebug("Editing NPC routes to skip dialogue");
+            PlayMakerFSM laceCorpseNPCFSM = FsmUtil.GetFsmPreprocessed(laceCorpseNPC, "Control");
+            SilkenSisters.Log.LogDebug("Editing Idle");
+            laceCorpseNPCFSM.ChangeTransition("Idle", "INTERACT", "Drop Pause");
+            SilkenSisters.Log.LogDebug("Drop Pause");
+            laceCorpseNPCFSM.DisableAction("Drop Pause", 0);
+            laceCorpseNPCFSM.ChangeTransition("Drop Down", "FINISHED", "End Pause");
+            laceCorpseNPCFSM.ChangeTransition("Drop Down", "IS_HURT", "End Pause");
+            SilkenSisters.Log.LogDebug("End Pause");
+            laceCorpseNPCFSM.DisableAction("End Pause", 0);
+            laceCorpseNPCFSM.GetAction<Wait>("End Pause", 1).time = 0.5f;
+
+            SilkenSisters.Log.LogDebug("Disabling end actions");
+            laceCorpseNPCFSM.DisableAction("End", 5);
+            laceCorpseNPCFSM.DisableAction("End", 6);
+            laceCorpseNPCFSM.DisableAction("End", 7);
+            laceCorpseNPCFSM.DisableAction("End", 8);
+            laceCorpseNPCFSM.DisableAction("End", 9);
+            laceCorpseNPCFSM.DisableAction("End", 10);
+            laceCorpseNPCFSM.DisableAction("End", 11);
+            laceCorpseNPCFSM.DisableAction("End", 12);
+            laceCorpseNPCFSM.DisableAction("End", 13);
+
+            SilkenSisters.Log.LogDebug("Disabling audio cutting");
+            laceCorpseFSM.DisableAction("Start", 0);
+            laceCorpseNPCFSM.DisableAction("Talk 1 Start", 3);
+            laceCorpseNPCFSM.DisableAction("End", 0);
+
+            SilkenSisters.Log.LogDebug("Finished setting up corpse handler");
+        }
+
+
+
+        // Sync fight edits
         private void prepareSync()
         {
-            if (SilkenSisters.syncedFight.Value && SilkenSisters.debugBuild) { 
+            if (SilkenSisters.syncedFight.Value && SilkenSisters.debugBuild) {
 
-                SilkenSisters.Log.LogMessage($"[Lace.prepareSync] Adding a Sync state");
-                _control.AddState("SilkenSync");
+                _control.enabled = false;
+                
+                NukeCoreAI();
+                SyncTransitions();
 
-                if (FsmEvent.GetFsmEvent("LACE_SYNC") == null)
-                {
-                    FsmEvent laceSync = new FsmEvent("LACE_SYNC");
-                    FsmEvent.AddFsmEvent(laceSync);
-                }
+                _control.enabled = true;
 
-                SilkenSisters.Log.LogMessage($"[Lace.prepareSync] Added a sync event");
-
-                _control.ChangeTransition("Evade Move", "FINISHED", "Idle");
-                _control.ChangeTransition("CrossSlash?", "FINISHED", "SilkenSync");
-
-                _control.AddTransition("SilkenSync", "LACE_SYNC", "Distance Check");
+                SilkenSisters.Log.LogMessage($"[Lace.prepareSync] Finished doing the sync stuff");
             }
         }
+
+        private void NukeCoreAI()
+        {
+            SilkenSisters.Log.LogMessage($"[Lace.prepareSync] Nuking a few states");
+
+            _control.RemoveState("Close");
+            _control.RemoveState("Far");
+            _control.RemoveState("Distance Check");
+            _control.RemoveState("CrossSlash?");
+            _control.RemoveState("P3 Check");
+            _control.RemoveState("P2 Check");
+            
+            _control.RemoveTransition("Idle", "ATTACK");
+            _control.RemoveTransition("Idle", "TOOK DAMAGE");
+
+            _control.ChangeTransition("Tele End", "FINISHED", "Idle");
+            _control.ChangeTransition("Counter End", "FINISHED", "Idle");
+            _control.ChangeTransition("Evade Move", "FINISHED", "Idle");
+            _control.ChangeTransition("Start Battle Refight", "FINISHED", "Idle");
+            _control.ChangeTransition("Land", "FINISHED", "Idle");
+            
+            _control.DisableAction("Idle", 2);
+            _control.DisableAction("Idle", 7);
+            _control.DisableAction("Idle", 9);
+            _control.AddAction("Idle", new Wait { time = 0.01f, finishEvent = FsmEvent.GetFsmEvent("FINISHED") });
+
+
+            //*/
+        }
+
+
+        private void SyncTransitions()
+        {
+            _control.AddState("SyncWait");
+            _control.AddTransition("Idle", "FINISHED", "SyncWait");
+
+            _control.AddTransition("SyncWait", "HOP CHARGE", "Hop To Charge");
+            _control.AddTransition("SyncWait", "HOP JSLASH", "Hop To J Slash");
+            _control.AddTransition("SyncWait", "HOP COMBO", "Hop To Combo");
+            _control.AddTransition("SyncWait", "COMBO", "ComboSlash 1");
+            _control.AddTransition("SyncWait", "JSLASH", "J Slash Antic");
+            _control.AddTransition("SyncWait", "COUNTER", "Counter Antic");
+            _control.AddTransition("SyncWait", "TO P2", "Hop To P2");
+            _control.AddTransition("SyncWait", "TO P3", "Hop To P3");
+            _control.AddTransition("SyncWait", "CROSS SLASH", "CrossSlash Aim");
+
+            _control.AddAction(
+                "SyncWait", 
+                new SendEventByName { 
+                    eventTarget = new FsmEventTarget { 
+                        gameObject = SilkenSisters.plugin.phantomBossSceneFSMOwner, 
+                        fsmName = "Silken Sisters Sync Control", 
+                        target = FsmEventTarget.EventTarget.GameObjectFSM 
+                    }, 
+                    sendEvent = "LACE READY", 
+                    delay = 0f,
+                    everyFrame = true
+                }
+            );
+
+        }
+
     }
 
     internal class Lace2Scene : MonoBehaviour
@@ -270,8 +396,20 @@ namespace SilkenSisters.Behaviors
         }
     }
 
-    internal class LaceCorpse : MonoBehaviour
+    internal class SilkenController : MonoBehaviour
     {
+        private PlayMakerFSM _control;
+        private void Awake()
+        {
+            Setup();
+        }
+
+        private void Setup()
+        {
+
+        }
+
+
     }
 
 }
