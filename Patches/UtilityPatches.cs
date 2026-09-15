@@ -11,8 +11,6 @@ namespace SilkenSisters.Patches
 {
     internal class UtilityPatches
     {
-
-
         [HarmonyPrefix]
         [HarmonyPatch(typeof(HeroController), "Die")]
         private static void setDeathListener(HeroController __instance, ref bool nonLethal, ref bool frostDeath)

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Text;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace SilkenSisters.Utils
 {
@@ -16,6 +17,7 @@ namespace SilkenSisters.Utils
         internal ManagedAssetGroup<GameObject> sceneCache;
         internal ManagedAssetGroup<AudioClip> audioClipCache;
         internal ManagedAssetGroup<GameObject> prefabCache;
+        internal ManagedAssetGroup<SpriteAtlas> atlasCache;
         internal ManagedAssetGroup<RandomAudioClipTable> audioClipTableCache;
     
         internal void RequestAssets()
@@ -78,6 +80,14 @@ namespace SilkenSisters.Utils
                 }
             ); 
 
+            atlasCache = ManagedAssetGroup<SpriteAtlas>.RequestAndCreate(null,
+                new Dictionary<string, ManagedAssetGroup<SpriteAtlas>.NonSceneAssetInfo>()
+                {
+                    {"LaceAtlas", new ManagedAssetGroup<SpriteAtlas>.NonSceneAssetInfo("atlases_assets_assets/sprites/_atlases/lace.spriteatlas", "Assets/Sprites/_Atlases/Lace.spriteatlas" )},
+                     
+                }
+            ); 
+
             audioClipTableCache = ManagedAssetGroup<RandomAudioClipTable>.RequestAndCreate(null,
                 new Dictionary<string, ManagedAssetGroup<RandomAudioClipTable>.NonSceneAssetInfo>()
                 {
@@ -101,6 +111,7 @@ namespace SilkenSisters.Utils
             yield return sceneCache.Load();
             yield return audioClipCache.Load();
             yield return prefabCache.Load();
+            yield return atlasCache.Load();
             yield return audioClipTableCache.Load();
 
             //assetManager.gameObjectCache.InstantiateAsset<GameObject>("

@@ -20,7 +20,5 @@ namespace SilkenSisters.Patches
                 __instance.fsm.DisableAction("Check", 3);
             }
         }
-
-
     }
 }

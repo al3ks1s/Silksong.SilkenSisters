@@ -11,8 +11,8 @@ using Silksong.DataManager;
 using Silksong.FsmUtil;
 using Silksong.UnityHelper.Extensions;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -35,17 +35,18 @@ namespace SilkenSisters
         public bool laceMourned { get; set; }
     }
 
-
     [BepInAutoPlugin(id: "io.github.al3ks1s.silkensisters")]
     [BepInDependency(Silksong.FsmUtil.Plugin.Id)]
     [BepInDependency("org.silksong-modding.i18n")]
     [BepInDependency(Silksong.AssetHelper.AssetHelperPlugin.Id)]
     [BepInDependency(PrepatcherPlugin.PrepatcherPlugin.Id)]
     [BepInDependency(Silksong.DataManager.DataManagerPlugin.Id)]
+    [BepInDependency(Silksong.UnityHelper.UnityHelperPlugin.Id)]
     [BepInDependency("io.github.flibber-hk.filteredlogs", BepInDependency.DependencyFlags.SoftDependency)]
     public partial class SilkenSisters : BaseUnityPlugin, ISaveDataMod<SaveData>
     {
         public static SilkenSisters instance;
+        public static string SilkenSistersPath = string.Empty; // Catalog load path do not touch
 
         private SaveData _saveData = new();
 
@@ -99,9 +100,11 @@ namespace SilkenSisters
             //FilteredLogs.API.ApplyFilter(Name, BepInEx.Logging.LogLevel.Fatal | BepInEx.Logging.LogLevel.Error | BepInEx.Logging.LogLevel.Warning);
 
             SilkenSisters.instance = this;
+            SilkenSistersPath = Path.GetDirectoryName(Info.Location);
+
             SilkenSisters.Log = new ManualLogSource("SilkenSisters");
             BepInEx.Logging.Logger.Sources.Add(Log);
-
+             
             configManager.BindConfig(Config);
             assetManager.RequestAssets();
 
@@ -110,15 +113,14 @@ namespace SilkenSisters
             DebugPatches.CreateDebugPatch();
             _encounterpatches = Harmony.CreateAndPatchAll(typeof(EncounterPatches));
             _utilitypatches = Harmony.CreateAndPatchAll(typeof(UtilityPatches));
-            StartCoroutine(WaitAndPatch());
+            StartCoroutine(WaitAndPatch()); 
 
             Log.LogMessage($"Plugin loaded and initialized");
         } 
-
         void OnDestroy()
         {
-            clearInstances();       
-            
+            clearInstances();
+
             assetManager.ClearCache();
 
             _langagepatches.UnpatchSelf();
@@ -127,7 +129,6 @@ namespace SilkenSisters
 
             DebugPatches.RemoveDebugPatch();
         } 
-
         private IEnumerator WaitAndPatch()
         {
             yield return new WaitForSeconds(10f); // Give game time to init Language
@@ -148,7 +149,6 @@ namespace SilkenSisters
                     !SilkenSisters.instance.SaveData.laceMourned &&
                     false;
         }
-
         public static bool canSetupMemoryFight()
         {
             SilkenSisters.Log.LogDebug($"[CanSetup] Scene:{SceneManager.GetActiveScene().name} " +
@@ -162,7 +162,6 @@ namespace SilkenSisters
                     PlayerDataAccess.blackThreadWorld && 
                     PlayerDataAccess.hasNeedolinMemoryPowerup;
         }
-
         public static bool canSetupNormalFight()
         {
             SilkenSisters.Log.LogDebug($"[CanSetup] Scene:{SceneManager.GetActiveScene().name} " +
@@ -176,7 +175,6 @@ namespace SilkenSisters
                     !PlayerDataAccess.defeatedPhantom && 
                     !PlayerDataAccess.blackThreadWorld;
         }
-
         public static bool isMemory()
         {
             SilkenSisters.Log.LogDebug($"[isMemory] Scene:{SceneManager.GetActiveScene().name} " +
@@ -186,6 +184,7 @@ namespace SilkenSisters
             return SceneManager.GetActiveScene().name == "Organ_01" && !PlayerDataAccess.defeatedPhantom && !PlayerDataAccess.blackThreadWorld && PlayerDataAccess.hasNeedolinMemoryPowerup;
         }
         
+
         private void onSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             Log.LogDebug($"[onSceneLoaded] Scene loaded : {scene.name}, active scene : {SceneManager.GetActiveScene()}, Path:{scene.path}");
@@ -206,7 +205,6 @@ namespace SilkenSisters
                 assetManager.ClearCache();
             }
         }
-        
         private IEnumerator preloadOrgan()
         {
              
@@ -271,6 +269,7 @@ namespace SilkenSisters
             }
         }
 
+
         private void clearInstances()
         {
             laceNPCInstance = null;
@@ -306,6 +305,7 @@ namespace SilkenSisters
 
         }
 
+
         public void setupNormalFight()
         {
             Log.LogDebug($"[setupFight] Trying to register phantom");
@@ -336,7 +336,6 @@ namespace SilkenSisters
             phantomBossScene.AddComponent<PhantomScene>();
             phantomBossScene.FindChild("Phantom").AddComponent<PhantomBoss>();
         }
-       
         public void setupMemoryFight()
         {
             Log.LogDebug($"[setupFight] Trying to register phantom");
@@ -379,7 +378,6 @@ namespace SilkenSisters
 
 
         }
-
         private void setupDeepMemoryZone()
         {
 
@@ -464,7 +462,6 @@ namespace SilkenSisters
                                                         $"Act3:{PlayerDataAccess.blackThreadWorld} " +
                                                         $"Needolin:{PlayerDataAccess.hasNeedolinMemoryPowerup}");
             }
-
         }
 
         [SD.Conditional("DEBUG")]
@@ -472,7 +469,7 @@ namespace SilkenSisters
         {
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Keypad0))
             {
-                ((PlayMakerFSM)phantomBossScene.FindChild("Phantom").GetComponent(typeof(PlayMakerFSM))).SetState("Phase Parry Bait");
+                //((PlayMakerFSM)phantomBossScene.FindChild("Phantom").GetComponent(typeof(PlayMakerFSM))).SetState("Phase Parry Bait");
             }
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Keypad1))
             {

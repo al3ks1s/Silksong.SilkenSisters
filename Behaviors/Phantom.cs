@@ -43,6 +43,8 @@ namespace SilkenSisters.Behaviors
                     TriggerLace1Jump();
                 }
 
+                
+
                 _control.AddMethod("Final Parry", endHornetConstrain);
                 SilkenSisters.Log.LogDebug($"[PhantomBoss.Setup] Finished setting phantom boss up");
             }
@@ -317,23 +319,23 @@ namespace SilkenSisters.Behaviors
 
         private void prepareSync()
         {
-            if (SilkenSisters.instance.configManager.syncedFight.Value && SilkenSisters.isMemory())
-            {
 
-                AddVars();
+            if (!(SilkenSisters.instance.configManager.syncedFight.Value && SilkenSisters.isMemory()))
+                return;
+            
+            AddVars();
 
-                Synchronize();
-                NukeStates();
+            Synchronize();
+            NukeStates();
 
-                AddParryBait();
-                AddDefensiveParry();
-                AddMock();
-                AddHorizontalDragoon();
-                AddRunStates();
-                AddPhaseStates();
-                AddWaitDefense();
-
-            }
+            AddParryBait();
+            AddDefensiveParry();
+            AddMock();
+            AddHorizontalDragoon();
+            AddRunStates();
+            AddPhaseStates();
+            AddWaitDefense();
+            AddSpecialDragoon();
         }
 
         private void AddVars()
@@ -354,7 +356,6 @@ namespace SilkenSisters.Behaviors
             _control.AddFloatVariable("Tele Distance").Value = SilkenSisters.instance.configManager.syncTeleDistance.Value;
 
             _control.AddBoolVariable("Stun Defense").Value = false;
-
         }
 
         private void Synchronize()
@@ -749,6 +750,24 @@ namespace SilkenSisters.Behaviors
 
         }
 
+        private void AddSpecialDragoon()
+        {
+            _control.AddState("P2 Dragoon");
+
+            _control.AddTransition("SyncWait", "DRAGOON SPECIAL", "P2 Dragoon");
+            _control.AddTransition("P2 Dragoon", "FINISHED", "Normal Dragoon");
+
+            _control.AddActions("P2 Dragoon", new FsmStateAction[]
+            {
+                new SetBoolValue(){ boolValue = true, boolVariable = _control.GetBoolVariable("Raging"), everyFrame = false },
+                new SetIntValue(){ intValue = 2, intVariable = _control.GetIntVariable("Rage Jumps"), everyFrame = false }
+            });
+
+            _control.AddActions("Dragoon End", new FsmStateAction[]
+            {
+                new SetBoolValue(){ boolValue = false, boolVariable = _control.GetBoolVariable("Raging"), everyFrame = false },
+            });
+        }
 
         private void Update()
         {
@@ -1831,7 +1850,7 @@ namespace SilkenSisters.Behaviors
                 new SendEventByName
                 {
                     eventTarget = PhantomTarget,
-                    sendEvent = "DRAGOON",
+                    sendEvent = "DRAGOON SPECIAL",
                     delay = 0
                 },
                 new SendEventByName
@@ -2555,7 +2574,7 @@ namespace SilkenSisters.Behaviors
 
             float average = (laceDistance + phantomDistance) / 2;
 
-            SilkenSisters.Log.LogDebug($"Lace:{laceDistance}, Phantom:{phantomDistance}, Average:{average}");
+            // SilkenSisters.Log.LogDebug($"Lace:{laceDistance}, Phantom:{phantomDistance}, Average:{average}");
 
             _control.GetFloatVariable("Hornet Distance").Value = average;
         }
@@ -2566,7 +2585,7 @@ namespace SilkenSisters.Behaviors
             float gatherTeleX = UnityEngine.Random.Range(76, 93);
             //SilkenSisters.Log.LogDebug($"{gatherTeleX} {hornetfsmowner.gameObject.Value.transform.position.x} {hornetfsmowner.gameObject.Value.transform.position.x - gatherTeleX}");
 
-            while (Math.Abs(hornetfsmowner.gameObject.Value.transform.position.x - gatherTeleX) < 3)
+            while (Math.Abs(hornetfsmowner.gameObject.Value.transform.position.x - gatherTeleX) < SilkenSisters.instance.configManager.syncRangeDistance.Value)
             {
                 gatherTeleX = UnityEngine.Random.Range(76, 93);
                 //SilkenSisters.Log.LogDebug($"{gatherTeleX} {hornetfsmowner.gameObject.Value.transform.position.x} {hornetfsmowner.gameObject.Value.transform.position.x - gatherTeleX}");
@@ -2586,16 +2605,28 @@ namespace SilkenSisters.Behaviors
 
         private void SelectSplitTelePosX()
         {
+            float hornetX = hornetfsmowner.gameObject.Value.transform.position.x;
 
             float splitTeleXLace = UnityEngine.Random.Range(76, 93);
+            float laceDistance = Math.Abs(hornetX - splitTeleXLace);
+
             float splitTeleXPhantom = UnityEngine.Random.Range(76, 93);
+            float phantomDistance = Math.Abs(hornetX - splitTeleXPhantom);
+
+            float hornetDistanceToTeleX = (laceDistance + phantomDistance) / 2;
             //SilkenSisters.Log.LogDebug($"{gatherTeleX} {hornetfsmowner.gameObject.Value.transform.position.x} {hornetfsmowner.gameObject.Value.transform.position.x - gatherTeleX}");
 
-            while (Math.Abs(splitTeleXPhantom - splitTeleXLace) < 4)
+            while (Math.Abs(splitTeleXPhantom - splitTeleXLace) < SilkenSisters.instance.configManager.syncTeleDistance.Value ||
+                hornetDistanceToTeleX < SilkenSisters.instance.configManager.syncRangeDistance.Value)
             {
                 splitTeleXLace = UnityEngine.Random.Range(76, 93);
+                laceDistance = Math.Abs(hornetX - splitTeleXLace);
+
                 splitTeleXPhantom = UnityEngine.Random.Range(76, 93);
-                //SilkenSisters.Log.LogDebug($"{gatherTeleX} {hornetfsmowner.gameObject.Value.transform.position.x} {hornetfsmowner.gameObject.Value.transform.position.x - gatherTeleX}");
+                phantomDistance = Math.Abs(hornetX - splitTeleXPhantom);
+                hornetDistanceToTeleX = (laceDistance + phantomDistance) / 2;
+
+                // SilkenSisters.Log.LogDebug($"{splitTeleXPhantom} {splitTeleXLace}");
             }
             
             _control.GetFloatVariable("Lace X").Value = splitTeleXLace;

@@ -1,10 +1,14 @@
-﻿using HutongGames.PlayMaker;
+﻿using HarmonyLib;
+using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
+using Silksong.AssetHelper.ManagedAssets;
 using Silksong.FsmUtil;
 using Silksong.UnityHelper.Extensions;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace SilkenSisters.Behaviors
 {
@@ -299,7 +303,8 @@ namespace SilkenSisters.Behaviors
                 SetupDefenseParry();
                 SetupMock();
                 AddWaitDefense();
-
+                AddPlunge();
+                
                 _control.enabled = true;
 
                 SilkenSisters.Log.LogDebug($"[Lace.prepareSync] Finished doing the sync stuff");
@@ -747,6 +752,45 @@ namespace SilkenSisters.Behaviors
             );
 
         }
+
+        private void AddPlunge()
+        {
+
+            var laceAtlas = SilkenSisters.instance.assetManager.atlasCache["LaceAtlas"].Result;
+            Sprite[] laceSprites = new Sprite[laceAtlas.spriteCount];
+            laceAtlas.GetSprites(laceSprites);
+
+            foreach (var sprite in laceSprites)
+            {
+                SilkenSisters.Log.LogInfo($"{sprite.name}");
+            }
+
+            var animator = gameObject.GetComponent<tk2dSpriteAnimator>();
+           
+            
+            //var plungeClîp = Silksong.UnityHelper.Util.Tk2dUtil.CreateTk2dAnimationClip(
+            //    "Cross Slash Land",
+            //    12,
+            //    new Sprite[] { lacePlungeSprite }
+            //);
+
+            //animator.Library.clips = animator.Library.clips.AddToArray( plungeClip );
+            //animator.Library.lookup["Cross Slash Land"] = new tk2dSpriteAnimation.AnimationInfo { clip = plungeClip, id = animator.Library.clips.Length };
+
+        }
+
+        private tk2dSpriteCollectionData CreateTk2dSpriteCollection(SpriteAtlas atlas)
+        {
+
+            Sprite[] spriteList = new Sprite[atlas.spriteCount];
+            atlas.GetSprites(spriteList);
+
+
+
+
+            return null;
+        }
+
 
         private void Update()
         {
