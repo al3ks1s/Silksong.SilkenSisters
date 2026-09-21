@@ -4,6 +4,7 @@
   If you are checking out from git and need to create a new one, you can use `dotnet new silksongpath` to generate one.
   -->
   <Import Condition="Exists('SilksongPath.props')" Project="SilksongPath.props" />
+	
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>latest</LangVersion>
@@ -23,19 +24,23 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <RepositoryUrl>https://github.com/al3ks1s/SilkenSisters</RepositoryUrl>
-    <Version>0.4.8</Version>
   </PropertyGroup>
+	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <IsPublishable>True</IsPublishable>
   </PropertyGroup>
+	
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <IsPublishable>True</IsPublishable>
   </PropertyGroup>
+	
 	<PropertyGroup>
 	<NeutralLanguage>EN</NeutralLanguage>
 	<SupportedOSPlatformVersion>8.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
+	
   <ItemGroup>
+    <PackageReference Include="al3ks1sCore" Version="0.1.1" />
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="Harmonize" Version="1.0.6">
@@ -55,25 +60,41 @@
     <!--If you're unable resolve this dependency, check that you're using the nuget v3 package feed instead of v2.-->
     <PackageReference Include="Silksong.GameLibs" Version="1.1.0-silksong1.0.29315" PrivateAssets="all" />
   </ItemGroup>
+	
   <ItemGroup>
     <Folder Remove="thunderstore/tmp;thunderstore/dist" />
     <None Include="README.md" Pack="True" PackagePath="README.md" />
     <None Include="thunderstore/icon.png" Pack="True" PackagePath="icon.png" />
   </ItemGroup>
-  <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
+
+	<!-- Gather all assets in the project -->
+	<ItemGroup>
+		<Assets Include="Assets/**/*" PackDir="plugins/Assets" />
+	</ItemGroup>
+
+	<Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
+	  
     <ItemGroup>
       <Binaries Include="$(TargetPath)" />
       <Binaries Include="$(TargetDir)/$(TargetName).pdb" />
 	  <Binaries Include="languages/*.json" PackDir="plugins/languages" />
 	  <Binaries Include="languages/*.json" PackDir="languages" />
     </ItemGroup>
+	  
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/thunderstore</ThunderstoreDir>
     </PropertyGroup>
+	  
     <Copy SourceFiles="@(Binaries)" DestinationFolder="$(SilksongFolder)/BepInEx/plugins/$(TargetName)/%(Binaries.PackDir)" Condition="'$(SilksongFolder)' != '' And Exists('$(SilksongFolder)')" />
+	<Copy SourceFiles="@(Assets)" DestinationFolder="$(SilksongPluginsFolder)/al3ks1s-$(AssemblyTitle)/%(Assets.PackDir)" Condition="'$(SilksongPluginsFolder)' != '' And Exists('$(SilksongPluginsFolder)')" />
+	  
     <RemoveDir Directories="$(ThunderstoreDir)/tmp;$(ThunderstoreDir)/dist" />
     <MakeDir Directories="$(ThunderstoreDir)/tmp" />
+	  
     <Copy SourceFiles="@(Binaries)" DestinationFolder="$(ThunderstoreDir)/tmp/%(Binaries.PackDir)" />
+	<!-- Copy Assets to thunderstore expected location -->
+	<Copy SourceFiles="@(Assets)" DestinationFolder="$(ThunderstoreDir)/tmp/%(Assets.PackDir)" />
+	  
     <Exec Command="dotnet tool restore" />
     <Exec Command="dotnet tcli build --config-path &quot;$(ThunderstoreDir)/thunderstore.toml&quot; --package-name &quot;$(AssemblyTitle)&quot; --package-version $(Version)" StandardOutputImportance="High" StandardErrorImportance="High" />
   </Target>

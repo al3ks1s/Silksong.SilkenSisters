@@ -2,6 +2,17 @@
   "version": 1,
   "dependencies": {
     ".NETStandard,Version=v2.1": {
+      "al3ks1sCore": {
+        "type": "Direct",
+        "requested": "[0.1.1, )",
+        "resolved": "0.1.1",
+        "contentHash": "PeyRIigdYCQiBDhoq89WoVr+Vz8MNn6ZQiDepmrSfpEwIozXdj/bfE8LA8J+WVhEwk5VnZsFRfIudhyuk2vcXA==",
+        "dependencies": {
+          "BepInEx.Core": "5.4.21",
+          "HarmonyX": "2.9.0",
+          "UnityEngine.Modules": "6000.0.50"
+        }
+      },
       "BepInEx.Analyzers": {
         "type": "Direct",
         "requested": "[1.0.8, )",

@@ -824,6 +824,7 @@ namespace SilkenSisters.Behaviors
                 lace_pos.value.x += SilkenSisters.instance.configManager.DefenseParryDistance.Value;
             }
 
+
             lace_pos.value.y -= (0.5462f - 0.2494f);
         }
 
